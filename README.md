@@ -64,3 +64,20 @@ kakeibo-analytics-app/
 - 本番デプロイ
 - CSV形式の自動判別
 - カテゴリ自動推定（軽いML）
+
+## 💻 公開用（デモ）について
+
+このアプリの本体ロジック（CSV取込・分析・予測）は Django（Python） で実装しています。  
+
+一方、  
+“動いている様子を誰でも簡単に見られるデモ” のために、  
+Streamlit Cloud（無料）で公開用のミニUIを別途提供予定です。  
+
+- Django：本番想定のバックエンド・分析ロジック
+- Streamlit：ポートフォリオ閲覧用の軽量フロント
+
+※ 公開URLは準備でき次第 README に追記します。
+
+## 🚀 デプロイ方針
+- Backend（Django） → ローカル開発 or 学習用環境（Render 検討中）
+- Demo（Streamlit） → Streamlit Community Cloud（無料）
