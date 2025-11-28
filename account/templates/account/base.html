@@ -7,6 +7,20 @@
 <body>
     <header>
         <h1>家計簿アプリ（仮）</h1>
+            <nav style="margin-bottom: 8px;">
+                {% if user.is_authenticated %}
+                    <span>{{ user.username }} さんでログイン中</span>
+                    |
+                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="border:none;background:none;color:blue;text-decoration:underline;cursor:pointer;padding:0;">
+                            ログアウト
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">ログイン</a>
+                {% endif %}
+            </nav>
         <hr>
     </header>
 
