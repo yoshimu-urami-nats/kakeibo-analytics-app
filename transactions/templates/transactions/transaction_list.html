@@ -5,7 +5,10 @@
 {% block content %}
 <h2>明細一覧</h2>
 
-<p><a href="{% url 'home' %}">← トップに戻る</a></p>
+<p>
+    <a href="{% url 'home' %}">← トップに戻る</a>
+    <a href="{% url 'transactions:create' %}">明細を新しく登録する</a>
+</p>
 
 <table border="1" cellpadding="4" cellspacing="0">
     <tr>
