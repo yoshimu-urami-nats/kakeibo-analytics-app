@@ -1,0 +1,32 @@
+{% extends "account/base.html" %}
+
+{% block title %}明細一覧{% endblock %}
+
+{% block content %}
+<h2>明細一覧</h2>
+
+<p><a href="{% url 'home' %}">← トップに戻る</a></p>
+
+<table border="1" cellpadding="4" cellspacing="0">
+    <tr>
+        <th>日付</th>
+        <th>店名・サービス名</th>
+        <th>金額</th>
+        <th>誰の出費か</th>
+        <th>メモ</th>
+    </tr>
+    {% for t in transactions %}
+    <tr>
+        <td>{{ t.date }}</td>
+        <td>{{ t.shop }}</td>
+        <td>{{ t.amount }} 円</td>
+        <td>{{ t.member.short_name }}</td>
+        <td>{{ t.memo }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5">まだ明細は登録されていません。</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
