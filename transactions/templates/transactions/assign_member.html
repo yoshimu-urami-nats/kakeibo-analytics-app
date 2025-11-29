@@ -1,0 +1,19 @@
+{% extends 'account/base.html' %}
+
+{% block title %}誰の出費かを登録{% endblock %}
+
+{% block content %}
+<h2>誰の出費かを登録</h2>
+
+<p>対象の明細：{{ transaction.date }} / {{ transaction.shop }} / {{ transaction.amount }} 円</p>
+
+<p><a href="{% url 'transactions:unassigned' %}">← 未仕分け一覧に戻る</a></p>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.member }}
+    <br><br>
+    <button type="submit">この明細の「誰の出費か」を登録する</button>
+</form>
+
+{% endblock %}

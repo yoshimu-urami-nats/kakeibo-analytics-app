@@ -15,6 +15,8 @@ class Transaction(models.Model):
         verbose_name="誰の出費か",
         on_delete=models.PROTECT,  # 間違ってMember消しても明細は残す方針
         related_name="transactions",
+        null=True,
+        blank=True,
     )
 
     created_at = models.DateTimeField("作成日時", auto_now_add=True)

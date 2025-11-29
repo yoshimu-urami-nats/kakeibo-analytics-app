@@ -9,3 +9,9 @@ class TransactionForm(forms.ModelForm):
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
         }
+
+
+class AssignMemberForm(forms.ModelForm):
+    class Meta:
+        model = Transaction
+        fields = ["member"]
