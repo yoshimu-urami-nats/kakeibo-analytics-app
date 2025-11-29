@@ -68,4 +68,46 @@ def assign_member(request, pk):
     }
     return render(request, "transactions/assign_member.html", context)
 
+import csv
+from django.shortcuts import render, redirect
+from .models import Transaction
+
+def upload_csv(request):
+    if request.method == "POST":
+        csv_file = request.FILES.get("csv_file")
+
+        if not csv_file:
+            return render(request, "transactions/upload_form.html", {
+                "error": "CSVファイルを選択してください"
+            })
+
+        # デコードして読み込む
+        decoded = csv_file.read().decode("utf-8").splitlines()
+        reader = csv.reader(decoded)
+
+        header = next(reader, None)
+
+        # 1行ずつ取り込む
+        for row in reader:
+
+            if not row:
+                continue
+
+            # CSV の列順に合わせて取り込む（例）
+            # 日付, 店名, 金額, メモ
+            date, shop, amount, memo = row
+
+            Transaction.objects.create(
+                date=date,
+                shop=shop,
+                amount=int(amount),
+                memo=memo,
+                member=None,  # ← 未仕分けとして保存
+            )
+
+        # 取り込み完了 → 未仕分け画面へ
+        return redirect("transactions:unassigned")
+
+    # 初期表示（フォーム表示）
+    return render(request, "transactions/upload_form.html")
 

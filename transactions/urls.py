@@ -8,4 +8,5 @@ urlpatterns = [
     path("new/", views.transaction_create, name="create"),
     path("unassigned/", views.unassigned_list, name="unassigned"),
     path("assign/<int:pk>/", views.assign_member, name="assign_member"),
+    path("upload/", views.upload_csv, name="upload_csv"),
 ]
