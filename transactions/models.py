@@ -19,6 +19,21 @@ class Transaction(models.Model):
         blank=True,
     )
 
+    # ★追加：仕分け確定フラグ
+    is_confirmed = models.BooleanField("仕分け確定フラグ", default=False)
+
+    # ★追加：どうやって決めたか
+    decided_by = models.CharField(
+        "判定方法",
+        max_length=20,
+        choices=(
+            ("none", "未判定"),
+            ("rule", "ルール自動判定"),   # なんちゃってAI
+            ("manual", "人間が手動で確定"),
+        ),
+        default="none",
+    )
+
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
 

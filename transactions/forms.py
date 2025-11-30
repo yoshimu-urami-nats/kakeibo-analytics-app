@@ -15,3 +15,6 @@ class AssignMemberForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ["member"]
+
+class CSVUploadForm(forms.Form):
+    csv_file = forms.FileField(label="CSVファイル")
