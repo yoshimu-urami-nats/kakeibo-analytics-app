@@ -1,4 +1,8 @@
-# transactions/views.py
+# tr
+from django.contrib import messages  # フラッシュメッセージ
+
+from members.models import Member    # 出費者
+from .rules import guess_owner       # ルール関数
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -34,7 +38,10 @@ def transaction_create(request):
     if request.method == "POST":
         form = TransactionForm(request.POST)
         if form.is_valid():
-            form.save()
+            t = form.save(commit=False)
+            t.decided_by = "manual"   # 手入力 = manual
+            t.is_confirmed = True
+            t.save()
             return redirect("transactions:list")
     else:
         form = TransactionForm()
@@ -46,18 +53,55 @@ def transaction_create(request):
     )
 
 
+
 @login_required
 def unassigned_list(request):
-    """まだ「誰の出費か」が決まっていない明細の一覧"""
+    """まだ「誰の出費か」が決まっていない明細の一覧＆一括登録"""
+
+    # まず未仕分けの一覧を取得
     transactions = (
         Transaction.objects.filter(member__isnull=True)
         .order_by("-date", "-id")
     )
+
+    # プルダウン用にメンバー一覧も取得（表示順はお好みで）
+    members = Member.objects.all().order_by("id")
+
+    if request.method == "POST":
+        # フォームから送られてきた値を使って一括で登録
+        updated = 0
+
+        for t in transactions:
+            # 各行の <select name="member_{{ t.id }}"> に対応
+            member_id = request.POST.get(f"member_{t.id}")
+            if not member_id:
+                # 何も選ばれていない行はスキップ
+                continue
+
+            try:
+                member = Member.objects.get(pk=member_id)
+            except Member.DoesNotExist:
+                continue
+
+            t.member = member
+            t.decided_by = "manual"   # 人間が決めた
+            t.is_confirmed = True     # 確定済み
+            t.save()
+            updated += 1
+
+        # 終わったら同じ画面に戻る（F5で二重送信しないように）
+        return redirect("transactions:unassigned")
+
+    # GET のときは画面表示だけ
     return render(
         request,
         "transactions/unassigned_list.html",
-        {"transactions": transactions},
+        {
+            "transactions": transactions,
+            "members": members,
+        },
     )
+
 
 
 @login_required
@@ -68,7 +112,10 @@ def assign_member(request, pk):
     if request.method == "POST":
         form = AssignMemberForm(request.POST, instance=transaction)
         if form.is_valid():
-            form.save()
+            t = form.save(commit=False)
+            t.decided_by = "manual"   # 人が手で確定
+            t.is_confirmed = True     # 確定済みにする
+            t.save()
             return redirect("transactions:unassigned")
     else:
         form = AssignMemberForm(instance=transaction)
@@ -81,6 +128,7 @@ def assign_member(request, pk):
             "form": form,
         },
     )
+
 
 
 @login_required
@@ -134,3 +182,44 @@ def upload_csv(request):
         "transactions/upload_form.html",
         {"form": form},
     )
+
+# AI 一括仕分け用：ルールに基づいて member を自動設定
+OWNER_KEY_TO_MEMBER_NAME = {
+    "nacchan": "なっちゃん",
+    "yuhei": "ゆーへー",
+    "shared": "共有",
+}
+
+
+@login_required
+def auto_assign(request):
+    """AI（ルール）で未判定明細をまとめて仕分けする"""
+
+    # まだAIも人間も判定していない明細だけ対象
+    qs = Transaction.objects.filter(decided_by="none")
+
+    count = 0
+    for t in qs:
+        key = guess_owner(t.shop, t.date)
+        if key is None:
+            # 判定不能（Amazon/ユニクロなど）はスキップ
+            continue
+
+        member_name = OWNER_KEY_TO_MEMBER_NAME[key]
+
+        try:
+            member = Member.objects.get(name=member_name)
+        except Member.DoesNotExist:
+            # もしDBに該当 Member が居なかったら安全のためスキップ
+            continue
+
+        t.member = member
+        t.decided_by = "rule"    # ルールによる自動判定
+        t.is_confirmed = False   # まだ人間CK前
+        t.save()
+        count += 1
+
+    messages.success(request, f"AI判定で {count} 件を自動仕分けしました。")
+
+    # 未確定一覧に戻る
+    return redirect("transactions:unassigned")

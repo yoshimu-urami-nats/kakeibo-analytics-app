@@ -9,4 +9,5 @@ urlpatterns = [
     path("unassigned/", views.unassigned_list, name="unassigned"),
     path("assign/<int:pk>/", views.assign_member, name="assign_member"),
     path("upload/", views.upload_csv, name="upload_csv"),
+    path("auto_assign/", views.auto_assign, name="auto_assign"),
 ]

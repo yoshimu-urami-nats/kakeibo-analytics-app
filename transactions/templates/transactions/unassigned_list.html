@@ -1,36 +1,57 @@
 {% extends "account/base.html" %}
 
-{% block title %}未仕分け明細一覧{% endblock %}
-
 {% block content %}
 <h2>未仕分け明細一覧</h2>
 
 <p>
-    <a href="{% url 'transactions:list' %}">← 全明細一覧に戻る</a>
+  <a href="{% url 'transactions:auto_assign' %}">AI自動仕分け</a>
+</p>
+<p>
+  <a href="{% url 'transactions:list' %}">&larr; 全明細一覧に戻る</a>
 </p>
 
-<table border="1" cellpadding="4" cellspacing="0">
+<form method="post">
+  {% csrf_token %}
+
+  <table border="1" cellpadding="2" cellspacing="0">
     <tr>
-        <th>日付</th>
-        <th>店名・サービス名</th>
-        <th>金額</th>
-        <th>メモ</th>
-        <th>操作</th>
+      <th>日付</th>
+      <th>店名・サービス名</th>
+      <th>金額</th>
+      <th>誰の出費か</th>
+      <th>メモ</th>
     </tr>
+
     {% for t in transactions %}
     <tr>
-        <td>{{ t.date }}</td>
-        <td>{{ t.shop }}</td>
-        <td>{{ t.amount }} 円</td>
-        <td>{{ t.memo }}</td>
-        <td>
-            <a href="{% url 'transactions:assign_member' t.pk %}">誰の出費かを登録</a>
-        </td>
+      <td>{{ t.date }}</td>
+      <td>{{ t.shop }}</td>
+      <td>{{ t.amount }}円</td>
+
+      <td>
+        <select name="member_{{ t.id }}">
+          <option value="">--------</option>
+          {% for m in members %}
+            <option value="{{ m.id }}">
+              {{ m.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </td>
+
+      <td>{{ t.memo }}</td>
     </tr>
     {% empty %}
     <tr>
-        <td colspan="5">未仕分けの明細はありません 🎉</td>
+      <td colspan="5">未仕分けの明細はありません。</td>
     </tr>
     {% endfor %}
-</table>
+  </table>
+
+  <p style="margin-top: 1em;">
+    <button type="submit">選択した「誰の出費か」をまとめて登録する</button>
+  </p>
+</form>
+
 {% endblock %}
+
