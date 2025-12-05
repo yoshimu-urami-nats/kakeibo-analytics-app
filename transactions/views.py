@@ -223,3 +223,47 @@ def auto_assign(request):
 
     # 未確定一覧に戻る
     return redirect("transactions:unassigned")
+
+@login_required
+def to_confirm_list(request):
+    """
+    member は入っているが、is_confirmed=False の明細一覧。
+    → AIが入れたけど人間CKまだ、みたいな行たち
+    """
+    transactions = (
+        Transaction.objects
+        .filter(member__isnull=False, is_confirmed=False)
+        .order_by("-date", "-id")
+    )
+    return render(
+        request,
+        "transactions/to_confirm_list.html",
+        {"transactions": transactions},
+    )
+
+@login_required
+def confirm_bulk(request):
+    """チェックされた明細をまとめて '人間CK済み' にする"""
+    if request.method != "POST":
+        return redirect("transactions:to_confirm")
+
+    ids = request.POST.getlist("ids")  # checkbox の name="ids"
+
+    if not ids:
+        messages.info(request, "選択された明細がありません。")
+        return redirect("transactions:to_confirm")
+
+    # AI案でも手動でも、とにかく member が入っていて未確定のものだけ対象
+    qs = Transaction.objects.filter(
+        pk__in=ids,
+        member__isnull=False,
+        is_confirmed=False,
+    )
+
+    updated = qs.update(
+        is_confirmed=True,
+        decided_by="manual",   # 人間が内容を確認した、という意味でmanualに寄せる
+    )
+
+    messages.success(request, f"{updated} 件の明細を『人間CK済み』にしました。")
+    return redirect("transactions:to_confirm")

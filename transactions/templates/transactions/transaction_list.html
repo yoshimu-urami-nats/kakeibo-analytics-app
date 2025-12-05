@@ -6,6 +6,10 @@
 <h2>明細一覧</h2>
 
 <p>
+  <a href="{% url 'transactions:to_confirm' %}">要確認（未CK）明細だけを見る</a>
+</p>
+
+<p>
     <a href="{% url 'home' %}">← トップに戻る</a>
     <a href="{% url 'transactions:create' %}">明細を新しく登録する</a>
     <a href="{% url 'transactions:unassigned' %}">未仕分けの明細を仕分けする</a>
@@ -18,14 +22,21 @@
         <th>店名・サービス名</th>
         <th>金額</th>
         <th>誰の出費か</th>
+        <th>判定方法</th>
         <th>メモ</th>
     </tr>
     {% for t in transactions %}
     <tr>
-        <td>{{ t.date }}</td>
+        <td>{{ t.formatted_date }}</td>
         <td>{{ t.shop }}</td>
         <td>{{ t.amount }} 円</td>
         <td>{{ t.member.short_name }}</td>
+
+        <td>
+            {{ t.get_decided_by_display }}
+            {# Django が自動で choices の日本語ラベルを返してくれるやつ #}
+        </td>
+
         <td>{{ t.memo }}</td>
     </tr>
     {% empty %}

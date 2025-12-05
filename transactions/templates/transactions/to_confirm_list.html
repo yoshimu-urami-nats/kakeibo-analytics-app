@@ -1,0 +1,48 @@
+{% extends "account/base.html" %}
+
+{% block content %}
+<h2>要確認（まだ人間CKしていない）明細一覧</h2>
+
+<p>
+  <a href="{% url 'transactions:list' %}">&larr; 全明細一覧に戻る</a>
+</p>
+
+<form method="post" action="{% url 'transactions:confirm_bulk' %}">
+  {% csrf_token %}
+
+  <table border="1" cellpadding="2" cellspacing="0">
+    <tr>
+      <th>確定</th>
+      <th>日付</th>
+      <th>店名・サービス名</th>
+      <th>金額</th>
+      <th>誰の出費か</th>
+      <th>判定方法</th>
+      <th>メモ</th>
+    </tr>
+
+    {% for t in transactions %}
+    <tr>
+      <td>
+        <input type="checkbox" name="ids" value="{{ t.id }}">
+      </td>
+      <td>{{ t.formatted_date }}</td>
+      <td>{{ t.shop }}</td>
+      <td>{{ t.amount }}円</td>
+      <td>{{ t.member }}</td>
+      <td>{{ t.get_decided_by_display }}</td>
+      <td>{{ t.memo }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="7">要確認の明細はありません。</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <p style="margin-top: 1em;">
+    <button type="submit">選択した明細を『人間CK済み』にする</button>
+  </p>
+</form>
+
+{% endblock %}

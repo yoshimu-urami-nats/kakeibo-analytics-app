@@ -44,3 +44,9 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.shop} {self.amount}円 ({self.member})"
+
+    def formatted_date(self):
+        """yyyy/mm/dd (曜日) の形式で日付を返す"""
+        youbi = ["月", "火", "水", "木", "金", "土", "日"]
+        weekday = youbi[self.date.weekday()]  # 0=月曜〜6=日曜
+        return self.date.strftime(f"%Y/%m/%d ({weekday})")
