@@ -81,3 +81,7 @@ Streamlit Cloud（無料）で公開用のミニUIを別途提供予定です。
 ## 🚀 デプロイ方針
 - Backend（Django） → ローカル開発 or 学習用環境（Render 検討中）
 - Demo（Streamlit） → Streamlit Community Cloud（無料）
+
+## アーキテクチャ図
+
+<img src="docs/architecture.png" width="900">
