@@ -56,8 +56,14 @@ def guess_owner(shop: str, dt: Optional[date] = None) -> Optional[OwnerKey]:
         "ニューデイズ",
         "NEWDAYS",
     ]
+    
+    # コンビニ系
     if any(k in shop for k in convenience_keywords):
-        return "yuhei"
+        # dt が渡ってきている前提で曜日判定
+        # weekday(): 0=月 … 6=日
+        if dt is not None and dt.weekday() >= 5:
+            return "shared"   # 土日なら「共有」
+        return "yuhei"        # 平日は「ゆーへー」
 
     # 笑縁食堂＝ゆーへー
     if "笑縁食堂" in shop:
