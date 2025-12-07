@@ -19,12 +19,13 @@
       <th>店名・サービス名</th>
       <th>金額</th>
       <th>誰の出費か</th>
+      <th>カテゴリ</th>
       <th>メモ</th>
     </tr>
 
     {% for t in transactions %}
     <tr>
-      <td>{{ t.date }}</td>
+      <td>{{ t.formatted_date }}</td>
       <td>{{ t.shop }}</td>
       <td>{{ t.amount }}円</td>
 
@@ -39,11 +40,12 @@
         </select>
       </td>
 
+      <td>{{ t.category }}</td>
       <td>{{ t.memo }}</td>
     </tr>
     {% empty %}
     <tr>
-      <td colspan="5">未仕分けの明細はありません。</td>
+      <td colspan="6">未仕分けの明細はありません。</td>
     </tr>
     {% endfor %}
   </table>

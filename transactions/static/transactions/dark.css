@@ -1,0 +1,22 @@
+body {
+    background-color: #121212;
+    color: #f2f2f2;
+    font-family: "Meiryo", sans-serif;
+}
+
+table {
+    color: #f2f2f2;
+    border-color: #666;
+}
+
+th, td {
+    border-color: #666 !important;
+}
+
+a {
+    color: #80bfff;
+}
+
+a:hover {
+    color: #b3d9ff;
+}

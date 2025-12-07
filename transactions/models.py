@@ -1,6 +1,27 @@
 from django.db import models
 from members.models import Member
 
+class Category(models.Model):
+    CATEGORY_TYPE_CHOICES = [
+        ("variable", "変動費"),
+        ("fixed", "固定費"),
+    ]
+
+    name = models.CharField("カテゴリ名", max_length=50, unique=True)
+    type = models.CharField(
+        "種別",
+        max_length=10,
+        choices=CATEGORY_TYPE_CHOICES,
+        default="variable",
+    )
+
+    class Meta:
+        verbose_name = "カテゴリ"
+        verbose_name_plural = "カテゴリ"
+
+    def __str__(self):
+        return self.name
+
 
 class Transaction(models.Model):
     """クレカ明細1件分"""
@@ -18,6 +39,15 @@ class Transaction(models.Model):
         null=True,
         blank=True,
     )
+
+    category = models.ForeignKey(
+        "Category",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name="カテゴリ",
+    )
+
 
     # ★追加：仕分け確定フラグ
     is_confirmed = models.BooleanField("仕分け確定フラグ", default=False)

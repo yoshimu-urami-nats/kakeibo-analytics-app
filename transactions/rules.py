@@ -129,3 +129,89 @@ def guess_owner(shop: str, dt: Optional[date] = None) -> Optional[OwnerKey]:
 
     # どれにも当てはまらなかったら人間判断
     return None
+
+
+# だいたいのカテゴリ名（変動費だけ）
+CategoryKey = Literal[
+    "食費",
+    "日用品",
+    "娯楽",
+    "医療",
+    "ペット",
+    "交際",
+    "雑費",
+]
+
+
+def guess_category(shop: str) -> Optional[CategoryKey]:
+    """
+    店名からざっくりカテゴリを推定する。
+    - 戻り値:
+        "食費" / "日用品" / ... / None(判定不能)
+    """
+    if not shop:
+        return None
+
+    s = shop.upper()
+
+    # ------------ 食費系（コンビニ・スーパー・飲食店など） ------------
+    food_keywords = [
+        "ｾﾌﾞﾝ", "セブン", "SEVEN",
+        "ﾛｰｿﾝ", "ローソン", "LAWSON",
+        "ﾌｧﾐﾘｰﾏｰﾄ", "ファミリーマート", "ﾌｧﾐﾏ", "ファミマ",
+        "まいばすけっと",
+        "ライフ", "LIFE",
+        "カルディ", "KALDI",
+        "吉野家",
+    ]
+    if any(k.upper() in s for k in food_keywords):
+        return "食費"
+
+    # ------------ 日用品系（ドラッグストア・ホームセンター等） ------------
+    daily_keywords = [
+        "マツモトキヨシ",
+        "マツキヨ",
+        "ドラッグ",
+        "薬局",
+    ]
+    if any(k.upper() in s for k in daily_keywords):
+        return "日用品"
+
+    # ------------ 娯楽系（映画・ゲームなど） ------------
+    entertainment_keywords = [
+        "ＴＯＨＯｼﾈﾏｽﾞ",
+        "TOHO CINEMAS",
+        "シネマ",
+        "ゲーム",
+        "BOOK", "本屋",
+    ]
+    if any(k.upper() in s for k in entertainment_keywords):
+        return "娯楽"
+
+    # ------------ 医療系 ------------
+    medical_keywords = [
+        "クリニック",
+        "病院",
+        "歯科",
+    ]
+    if any(k.upper() in s for k in medical_keywords):
+        return "医療"
+
+    # ------------ ペット系 ------------
+    pet_keywords = [
+        "ペット",
+        "動物病院",
+    ]
+    if any(k.upper() in s for k in pet_keywords):
+        return "ペット"
+
+    # ------------ 交際費（プレゼント・外食チェーン名 などはおいおい） ------------
+    social_keywords = [
+        "花キューピット",
+        "ギフト",
+    ]
+    if any(k.upper() in s for k in social_keywords):
+        return "交際"
+
+    # どれにも当てはまらなければ、とりあえず雑費でもなく「未判定」にしておく
+    return None

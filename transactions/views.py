@@ -2,7 +2,7 @@
 from django.contrib import messages  # フラッシュメッセージ
 
 from members.models import Member    # 出費者
-from .rules import guess_owner       # ルール関数
+from .rules import guess_owner, guess_category       # ルール関数
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -11,7 +11,7 @@ import csv
 import io
 import datetime
 
-from .models import Transaction
+from .models import Transaction, Category
 from .forms import TransactionForm, AssignMemberForm, CSVUploadForm
 
 
@@ -200,22 +200,35 @@ def auto_assign(request):
 
     count = 0
     for t in qs:
+        # ① 出費者の推定
         key = guess_owner(t.shop, t.date)
-        if key is None:
-            # 判定不能（Amazon/ユニクロなど）はスキップ
-            continue
+        if key is not None:
+            member_name = OWNER_KEY_TO_MEMBER_NAME[key]
 
-        member_name = OWNER_KEY_TO_MEMBER_NAME[key]
+            try:
+                member = Member.objects.get(name=member_name)
+            except Member.DoesNotExist:
+                member = None
 
-        try:
-            member = Member.objects.get(name=member_name)
-        except Member.DoesNotExist:
-            # もしDBに該当 Member が居なかったら安全のためスキップ
-            continue
+            if member is not None:
+                t.member = member
+                t.decided_by = "rule"    # ルールによる自動判定
+                t.is_confirmed = False   # まだ人間CK前
+                count += 1
 
-        t.member = member
-        t.decided_by = "rule"    # ルールによる自動判定
-        t.is_confirmed = False   # まだ人間CK前
+        # ② カテゴリの推定（出費者が決まらなくても実行してOK）
+        if t.category is None:
+            cat_name = guess_category(t.shop)
+            if cat_name is not None:
+                try:
+                    category = Category.objects.get(name=cat_name)
+                except Category.DoesNotExist:
+                    category = None
+
+                if category is not None:
+                    t.category = category
+
+        # ③ 何か変更があればここでまとめて保存
         t.save()
         count += 1
 
