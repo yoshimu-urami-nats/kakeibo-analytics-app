@@ -215,3 +215,4 @@ db.sqlite3
 data_raw/
 *.csv
 *.txt
+*.sqlite3

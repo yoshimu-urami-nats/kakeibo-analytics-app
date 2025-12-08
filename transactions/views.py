@@ -22,6 +22,99 @@ def parse_date_from_string(date_str: str) -> datetime.date:
 
 
 @login_required
+def monthly_summary(request):
+    """人間CK済みの明細を、月ごと・カテゴリごと・人ごとに集計した表"""
+
+    # デフォルトの対象年月：一番新しい明細の日付
+    latest = Transaction.objects.order_by("-date").first()
+    if latest is None:
+        context = {
+            "year": None,
+            "month": None,
+            "members": [],
+            "rows": [],
+            "grand_per_member_list": [],
+            "grand_total": 0,
+        }
+        return render(request, "transactions/monthly_summary.html", context)
+
+    # URLパラメータ ?year=2025&month=11 があればそれを使う
+    year = int(request.GET.get("year", latest.date.year))
+    month = int(request.GET.get("month", latest.date.month))
+
+    # 対象月の「人間CK済み」明細だけ拾う
+    qs = (
+        Transaction.objects
+        .filter(is_confirmed=True, date__year=year, date__month=month)
+        .select_related("member", "category")
+    )
+
+    # 列に並べるメンバー（順番はID順で固定）
+    members = list(Member.objects.all().order_by("id"))
+
+    # rows_dict[category_id] = {"category": Category or None,
+    #                           "per_member": {member.id: amount, ...},
+    #                           "total": amount}
+    rows_dict = {}
+    grand_per_member = {m.id: 0 for m in members}
+    grand_total = 0
+
+    for t in qs:
+        cat = t.category      # None の可能性あり
+        cat_key = cat.id if cat is not None else None
+
+        if cat_key not in rows_dict:
+            rows_dict[cat_key] = {
+                "category": cat,
+                "per_member": {m.id: 0 for m in members},
+                "total": 0,
+            }
+
+        row = rows_dict[cat_key]
+
+        # カテゴリ合計
+        row["total"] += t.amount
+        grand_total += t.amount
+
+        # メンバー別合計
+        if t.member_id is not None:
+            row["per_member"][t.member_id] += t.amount
+            grand_per_member[t.member_id] += t.amount
+
+    # 表示順はカテゴリ名（なければ「未分類」として最後に）
+    def sort_key(row):
+        if row["category"] is None:
+            return "zzz 未分類"
+        return row["category"].name
+
+    # テンプレートで扱いやすい形に整形
+    rows = []
+    for r in sorted(rows_dict.values(), key=sort_key):
+        per_member_list = [r["per_member"][m.id] for m in members]
+        rows.append(
+            {
+                "category": r["category"],
+                "per_member_list": per_member_list,
+                "total": r["total"],
+            }
+        )
+
+    grand_per_member_list = [grand_per_member[m.id] for m in members]
+
+    context = {
+        "year": year,
+        "month": month,
+        "members": members,
+        "rows": rows,
+        "grand_per_member_list": grand_per_member_list,
+        "grand_total": grand_total,
+    }
+    return render(request, "transactions/monthly_summary.html", context)
+
+
+
+
+@login_required
 def transaction_list(request):
     """明細の一覧（全部）"""
     transactions = Transaction.objects.all().order_by("-date", "-id")

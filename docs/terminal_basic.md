@@ -150,3 +150,113 @@ git push origin main
 - Django の基礎図（処理の流れ）  
 - URL → VIEW → TEMPLATE  
 - モデル → マイグレーション → DB  
+
+---
+
+# 🟦 6. Django シェル（python manage.py shell）
+
+## ● シェルって何？
+- Django の中身に直接さわる「実験用の Python 画面」
+- DB の中身をちょっとだけ書き換えたり、関数を試すときに使う
+
+---
+
+## ● 起動
+
+プロジェクトのルート（manage.py がある場所）で：
+
+```bash
+python manage.py shell
+```
+
+`>>>` みたいなプロンプトが出たらシェルの中。
+
+## ● 終了
+
+どれでも OK なやつ：
+
+```python
+exit()
+```
+
+```python
+quit()
+```
+
+またはキーボードで Ctrl + Z → Enter（Windows）  
+
+## ● よく使う操作例
+
+### 1) モデル・関数を読み込む
+
+```python
+from transactions.models import Transaction
+from transactions.rules import guess_category
+```
+
+### 2) カテゴリがまだ空（None）の明細だけ取ってくる
+
+```python
+qs = Transaction.objects.filter(category__isnull=True)
+```
+
+### 3) まとめてカテゴリを埋める例
+
+```python
+for t in qs:
+    cat = guess_category(t.shop)  # お店の名前からカテゴリを推測
+    if cat is not None:          # 推測できたときだけ上書き
+        t.category = cat
+        t.save()
+```
+
+※ 複数行の for 文を書くときは、
+- インデント（スペース）をそろえる
+- 一番下まで書き終わったら 空行を 1 行入れて Enter をすると実行される。
+
+---
+
+# 🟦 7. きれいなサンプル DB を保存する方法
+
+### ✅ 一番カンタンなやり方（SQLite ファイルをコピー）
+
+1. `runserver` を止める（ターミナルで `Ctrl + C`）
+2. プロジェクトフォルダにある `db.sqlite3` を **コピーして保管**
+
+例：
+- `db.sqlite3`（普段使うやつ）
+- `db_sample_2025-11-XX.sqlite3`（きれいに整えたスナップショット）
+
+3. 「まっさらでテストしたい／サンプルに戻したい」ときは：
+   - `runserver` を止める
+   - 今の `db.sqlite3` を `db_working_backup.sqlite3` みたいにリネーム
+   - サンプルの `db_sample_2025-11-XX.sqlite3` をコピーして  
+     名前を **`db.sqlite3`** にする
+   - 必要なら `python manage.py migrate` を一応流す
+
+これで
+
+- パターンA：まっさらにしたい → `db.sqlite3` を削除して `migrate` だけ実行
+- パターンB：きれいなサンプル状態に戻したい → サンプルの sqlite ファイルを戻す
+
+の両方ができるようになる。
+
+### もう一段ちゃんとやるなら（dumpdata / loaddata）
+
+そのうち余裕が出てきたら、こんなのも試してみていいかも：
+
+- 保存（エクスポート）
+
+```bash
+python manage.py dumpdata > sample.json
+```
+
+- 復元の流れ（ざっくり）
+
+```bash
+del db.sqlite3         # Windows ならエクスプローラーでもOK
+python manage.py migrate
+python manage.py loaddata sample.json
+```
+
+でも今は、SQLite ファイルを丸ごとコピーしてスナップショット管理で十分実用レベルだと思う👍

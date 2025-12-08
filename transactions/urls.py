@@ -12,4 +12,5 @@ urlpatterns = [
     path("auto_assign/", views.auto_assign, name="auto_assign"),
     path("to_confirm/", views.to_confirm_list, name="to_confirm"),
     path("confirm_bulk/", views.confirm_bulk, name="confirm_bulk"),
+    path("summary/", views.monthly_summary, name="monthly_summary"),
 ]

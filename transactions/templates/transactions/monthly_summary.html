@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>カテゴリ別サマリ | 家計簿アプリ（仮）</title>
+    <link rel="stylesheet" href="{% static 'transactions/dark.css' %}">
+</head>
+<body>
+    <h1>家計簿アプリ（仮）</h1>
+    <p>
+        {{ request.user.username }} さんでログイン中
+    </p>
+
+    {% if year and month %}
+        <h2>{{ year }}年{{ month }}月 カテゴリ別サマリ（人間CK済みだけ）</h2>
+    {% else %}
+        <h2>カテゴリ別サマリ</h2>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'transactions:list' %}">← 全明細一覧に戻る</a>
+    </p>
+
+    {% if rows %}
+        <table class="kakeibo-table">
+            <thead>
+                <tr>
+                    <th>カテゴリ</th>
+                    {% for m in members %}
+                        <th>{{ m.name }}</th>
+                    {% endfor %}
+                    <th>カテゴリ合計</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>
+                            {% if row.category %}
+                                {{ row.category.name }}
+                            {% else %}
+                                （未分類）
+                            {% endif %}
+                        </td>
+                        {% for value in row.per_member_list %}
+                            <td style="text-align:right;">
+                                {% if value %}{{ value }}円{% endif %}
+                            </td>
+                        {% endfor %}
+                        <td style="text-align:right;">{{ row.total }}円</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>合計</th>
+                    {% for value in grand_per_member_list %}
+                        <th style="text-align:right;">
+                            {% if value %}{{ value }}円{% endif %}
+                        </th>
+                    {% endfor %}
+                    <th style="text-align:right;">{{ grand_total }}円</th>
+                </tr>
+            </tfoot>
+        </table>
+    {% else %}
+        <p>この月の「人間CK済み」明細がまだありません。</p>
+    {% endif %}
+</body>
+</html>
