@@ -20,3 +20,59 @@ a {
 a:hover {
     color: #b3d9ff;
 }
+
+/* ===========================
+   管理画面風テーブル強化版
+   =========================== */
+
+/* テーブル全体 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #e5e5e5;
+}
+
+/* ヘッダー行 */
+th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ヘッダーだけ色を強制的に変える（nth-child の影響を受けない） */
+thead tr {
+    background-color: #101010 !important;  /* 本体より一段だけ明るい */
+}
+thead th {
+    font-weight: bold;
+}
+
+/* 偶数・奇数で濃淡を付ける（罫線なし） */
+/* 濃いほう（奇数行） */
+tr:nth-child(odd) {
+    background-color: #1f1f1f;  /* 今よりワントーン明るい */
+}
+
+/* 薄いほう（偶数行） */
+tr:nth-child(even) {
+    background-color: #141414;  /* ちょい濃い黒 */
+}
+
+/* 行の特別ホバー（admin風） */
+tbody tr:hover {
+    background-color: #2a2a2a;  /* ひと段階だけ明るく */
+    cursor: pointer;
+}
+
+/* セルの余白 */
+td {
+    padding: 10px 12px;
+}
+
+/* 罫線なしにするための最終ガード */
+td, th {
+    border: none !important;
+}
