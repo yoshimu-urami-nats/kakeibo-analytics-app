@@ -17,7 +17,17 @@
     <a href="{% url 'transactions:monthly_summary' %}">カテゴリ別サマリを見る</a>
 </p>
 
-<table class="kakeibo-table">
+<div class="transaction-search">
+  <label for="transactionSearchInput">明細を検索：</label>
+  <input
+    type="text"
+    id="transactionSearchInput"
+    placeholder="カテゴリ / メモ / 店名 / 金額 などで絞り込み"
+  />
+</div>
+
+
+<table id="transactionTable" class="kakeibo-table">
     <tr>
         <th>日付</th>
         <th>店名・サービス名</th>
@@ -48,4 +58,28 @@
     </tr>
     {% endfor %}
 </table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("transactionSearchInput");
+    const table = document.getElementById("transactionTable");
+    if (!input || !table) return;
+
+    // すべての行を取得
+    const allRows = Array.from(table.querySelectorAll("tr"));
+
+    // 最初の行（ヘッダー）は除外、それ以降がデータ
+    const dataRows = allRows.slice(1);
+
+    input.addEventListener("input", function () {
+        const keyword = input.value.trim().toLowerCase();
+
+        dataRows.forEach((row) => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(keyword) ? "" : "none";
+        });
+    });
+});
+</script>
+
 {% endblock %}
