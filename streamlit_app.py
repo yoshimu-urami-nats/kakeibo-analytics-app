@@ -44,3 +44,28 @@ else:
 
     st.subheader("月別支出合計（全員ぶん）")
     st.line_chart(month_total)
+
+    # ---- 月を選べるセレクトボックス ----
+    months = sorted(df["month"].unique())
+
+    # デフォルトを「一番新しい月」にしておく
+    default_index = len(months) - 1 if months else 0
+
+    selected_month = st.selectbox(
+        "月を選択（明細をチェックする用）",
+        months,
+        index=default_index,
+    )
+
+    # 選択した月のデータだけに絞り込み
+    filtered = df[df["month"] == selected_month]
+
+    # 合計金額をひと目で出す
+    total_selected = int(filtered["amount"].sum())
+    st.metric(f"{selected_month} の合計支出", f"{total_selected:,} 円")
+
+    # 選択した月の明細を少しだけ表示
+    st.subheader(f"{selected_month} の明細（先頭20件）")
+    st.dataframe(
+        filtered[["date", "amount", "memo", "member_id"]].head(20)
+    )
