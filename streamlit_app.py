@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import matplotlib.pyplot as plt
+
 
 st.title("📊 家計簿ダッシュボード（本物DBテスト）")
 
@@ -69,3 +71,23 @@ else:
     st.dataframe(
         filtered[["date", "amount", "memo", "member_id"]].head(20)
     )
+
+    # ---- 選択した月のメンバー別支出割合（円グラフ）----
+    member_total = filtered.groupby("member_id")["amount"].sum()
+
+    if not member_total.empty:
+        st.subheader(f"{selected_month} のメンバー別支出割合")
+
+        fig, ax = plt.subplots()
+        ax.pie(
+            member_total.values,
+            labels=[f"member {m}" for m in member_total.index],
+            autopct="%1.1f%%",
+            startangle=90,
+        )
+        ax.axis("equal")  # 真円にする
+
+        st.pyplot(fig)
+    else:
+        st.info("この月には明細がありません。")
+
