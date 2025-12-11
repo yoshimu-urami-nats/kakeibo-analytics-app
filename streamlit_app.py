@@ -5,6 +5,17 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
+# 日本語フォント設定（Windows 想定）
+plt.rcParams["font.family"] = "Meiryo"
+plt.rcParams["axes.unicode_minus"] = False  # マイナス記号の文字化け防止
+
+
+# メンバーID対応表（今後DBから読むように拡張可）
+MEMBER_NAME = {
+    3: "共有",
+    4: "なっちゃん",
+    5: "ゆーへー",
+}
 
 st.title("📊 家計簿ダッシュボード（本物DBテスト）")
 
@@ -62,6 +73,9 @@ else:
     # 選択した月のデータだけに絞り込み
     filtered = df[df["month"] == selected_month]
 
+    # member_id を名前に変換
+    filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
+
     # 合計金額をひと目で出す
     total_selected = int(filtered["amount"].sum())
     st.metric(f"{selected_month} の合計支出", f"{total_selected:,} 円")
@@ -69,7 +83,7 @@ else:
     # 選択した月の明細を少しだけ表示
     st.subheader(f"{selected_month} の明細（先頭20件）")
     st.dataframe(
-        filtered[["date", "amount", "memo", "member_id"]].head(20)
+        filtered[["date", "amount", "memo", "member_name"]].head(20)
     )
 
     # ---- 選択した月のメンバー別支出割合（円グラフ）----
@@ -81,7 +95,7 @@ else:
         fig, ax = plt.subplots()
         ax.pie(
             member_total.values,
-            labels=[f"member {m}" for m in member_total.index],
+            labels=[MEMBER_NAME.get(m, f"member {m}") for m in member_total.index],
             autopct="%1.1f%%",
             startangle=90,
         )
