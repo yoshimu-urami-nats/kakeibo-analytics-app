@@ -26,8 +26,8 @@ st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
 
 st.title("📊 家計簿ダッシュボード")
 st.caption("Django の SQLite DB からリアルタイムで集計中")
+st.markdown("---")
 
-st.divider()
 
 
 @st.cache_data
@@ -64,7 +64,8 @@ else:
     month_total.rename(columns={"amount": "total_amount"}, inplace=True)
 
 
-    st.subheader("月別支出合計（全員ぶん）")
+    st.markdown("### 月別支出合計（全員ぶん）")
+
     chart = (
         alt.Chart(month_total)
         .mark_line(point=True)
@@ -103,7 +104,8 @@ else:
     # 左カラム：合計 & 明細
     with left_col:
         total_selected = int(filtered["amount"].sum())
-        st.metric(f"{selected_month} の合計支出", f"{total_selected:,} 円")
+        st.markdown(f"### {selected_month} の合計支出")
+        st.metric("合計支出", f"{total_selected:,} 円")
 
         st.subheader(f"{selected_month} の明細（先頭20件）")
         st.dataframe(
