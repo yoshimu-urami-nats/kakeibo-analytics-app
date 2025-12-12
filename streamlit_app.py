@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import altair as alt
 
 # 日本語フォント設定（Windows 想定）
 plt.rcParams["font.family"] = "Meiryo"
@@ -57,12 +58,28 @@ else:
         st.dataframe(df.head())
 
     # 月別合計を出してみる
+    df["date"] = pd.to_datetime(df["date"])
     df["month"] = df["date"].dt.to_period("M").astype(str)
-    month_total = df.groupby("month")["amount"].sum()
+    month_total = df.groupby("month")["amount"].sum().reset_index()
+    month_total.rename(columns={"amount": "total_amount"}, inplace=True)
+
 
     st.subheader("月別支出合計（全員ぶん）")
-    st.line_chart(month_total, height=250)
-    # st.line_chart(month_total)　旧
+    chart = (
+        alt.Chart(month_total)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X("month:N", title="月"),
+            y=alt.Y("total_amount:Q", title="合計支出（円）"),
+            tooltip=[
+                alt.Tooltip("month:N", title="月"),
+                alt.Tooltip("total_amount:Q", title="合計支出", format=","),
+            ],
+        )
+        .properties(height=280)
+    )
+
+    st.altair_chart(chart, use_container_width=True)
 
     # ---- 月を選べるセレクトボックス（全幅）----
     months = sorted(df["month"].unique())
