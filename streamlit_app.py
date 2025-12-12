@@ -17,11 +17,16 @@ MEMBER_NAME = {
     5: "ゆーへー",
 }
 
-st.title("📊 家計簿ダッシュボード（本物DBテスト）")
-
 # ---- DB へのパス設定 ----
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "db.sqlite3"
+
+st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
+
+st.title("📊 家計簿ダッシュボード")
+st.caption("Django の SQLite DB からリアルタイムで集計中")
+
+st.divider()
 
 
 @st.cache_data
@@ -48,60 +53,63 @@ df = load_transactions()
 if df.empty:
     st.warning("まだ明細データが入ってないみたい。")
 else:
-    st.subheader("生の明細データ（先頭5件だけ）")
-    st.dataframe(df.head())
+    with st.expander("生の明細データ（先頭5件だけ）"):
+        st.dataframe(df.head())
 
     # 月別合計を出してみる
     df["month"] = df["date"].dt.to_period("M").astype(str)
     month_total = df.groupby("month")["amount"].sum()
 
     st.subheader("月別支出合計（全員ぶん）")
-    st.line_chart(month_total)
+    st.line_chart(month_total, height=250)
+    # st.line_chart(month_total)　旧
 
-    # ---- 月を選べるセレクトボックス ----
+    # ---- 月を選べるセレクトボックス（全幅）----
     months = sorted(df["month"].unique())
-
-    # デフォルトを「一番新しい月」にしておく
     default_index = len(months) - 1 if months else 0
 
-    selected_month = st.selectbox(
-        "月を選択（明細をチェックする用）",
-        months,
-        index=default_index,
-    )
+    colA, colB, colC = st.columns([1,2,1])
+    with colB:
+        selected_month = st.selectbox(
+            "月を選択（明細をチェックする用）",
+            months,
+            index=default_index,
+        )
 
-    # 選択した月のデータだけに絞り込み
-    filtered = df[df["month"] == selected_month]
-
-    # member_id を名前に変換
+    # ---- 選択した月のデータを用意 ----
+    filtered = df[df["month"] == selected_month].copy()
     filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
 
-    # 合計金額をひと目で出す
-    total_selected = int(filtered["amount"].sum())
-    st.metric(f"{selected_month} の合計支出", f"{total_selected:,} 円")
+    # 2カラムレイアウト：左 = 明細＆合計、右 = 円グラフ
+    left_col, right_col = st.columns([2, 1])
 
-    # 選択した月の明細を少しだけ表示
-    st.subheader(f"{selected_month} の明細（先頭20件）")
-    st.dataframe(
-        filtered[["date", "amount", "memo", "member_name"]].head(20)
-    )
+    # 左カラム：合計 & 明細
+    with left_col:
+        total_selected = int(filtered["amount"].sum())
+        st.metric(f"{selected_month} の合計支出", f"{total_selected:,} 円")
 
-    # ---- 選択した月のメンバー別支出割合（円グラフ）----
-    member_total = filtered.groupby("member_id")["amount"].sum()
-
-    if not member_total.empty:
-        st.subheader(f"{selected_month} のメンバー別支出割合")
-
-        fig, ax = plt.subplots()
-        ax.pie(
-            member_total.values,
-            labels=[MEMBER_NAME.get(m, f"member {m}") for m in member_total.index],
-            autopct="%1.1f%%",
-            startangle=90,
+        st.subheader(f"{selected_month} の明細（先頭20件）")
+        st.dataframe(
+            filtered[["date", "amount", "memo", "member_name"]].head(20)
         )
-        ax.axis("equal")  # 真円にする
 
-        st.pyplot(fig)
-    else:
-        st.info("この月には明細がありません。")
+    # 右カラム：メンバー別円グラフ
+    with right_col:
+        member_total = filtered.groupby("member_name")["amount"].sum()
+
+        if not member_total.empty:
+            st.subheader(f"{selected_month} のメンバー別支出割合")
+
+            fig, ax = plt.subplots()
+            ax.pie(
+                member_total.values,
+                labels=member_total.index,
+                autopct="%1.1f%%",
+                startangle=90,
+            )
+            ax.axis("equal")  # 真円
+            st.pyplot(fig)
+        else:
+            st.info("この月には明細がありません。")
+
 
