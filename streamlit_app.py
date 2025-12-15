@@ -147,14 +147,40 @@ else:
 
     # 左カラム：合計 & 明細
     with left_col:
+        # 今月の合計
         total_selected = int(filtered["amount"].sum())
+
+        # ------------- 前月比を計算 -------------
+        delta_text = None  # 表示なしの初期値
+
+        # months は既に上で作っている「全月一覧」
+        if selected_month in months:
+            idx = months.index(selected_month)
+
+            # 前の月が存在する場合のみ計算
+            if idx > 0:
+                prev_month = months[idx - 1]
+
+                # month_total（上で作った月別集計）から前月の金額を取得
+                prev_row = month_total[month_total["month"] == prev_month]["total_amount"]
+
+                if not prev_row.empty:
+                    prev_total = int(prev_row.iloc[0])
+
+                    diff = total_selected - prev_total  # 金額差
+                    if prev_total != 0:
+                        rate = diff / prev_total * 100
+                        delta_text = f"{diff:+,} 円（{rate:+.1f}%）"
+                    else:
+                        delta_text = f"{diff:+,} 円"
+
+        # ------------- 表示 -------------
         st.markdown(f"### {selected_month} の合計支出")
-        st.metric("合計支出", f"{total_selected:,} 円")
+        st.metric("合計支出", f"{total_selected:,} 円", delta=delta_text)
 
         st.subheader(f"{selected_month} の明細（先頭20件）")
-        st.dataframe(
-            filtered[["date", "amount", "memo", "member_name"]].head(20)
-        )
+        st.dataframe(filtered[["date", "amount", "memo", "member_name"]].head(20))
+
 
     # 右カラム：メンバー別円グラフ
     with right_col:
