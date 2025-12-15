@@ -82,6 +82,40 @@ else:
 
     st.altair_chart(chart, use_container_width=True)
 
+    # ★ メンバー別 × 月別の集計データ
+    df_for_member = df.copy()
+    df_for_member["member_name"] = df_for_member["member_id"].map(MEMBER_NAME)
+
+    member_month_total = (
+        df_for_member
+        .groupby(["month", "member_name"])["amount"]
+        .sum()
+        .reset_index()
+    )
+
+    # ---- メンバー別の月別支出推移 ----
+    st.subheader("月別支出推移（メンバー別）")
+
+    member_chart = (
+        alt.Chart(member_month_total)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X("month:N", title="月"),
+            y=alt.Y("amount:Q", title="支出（円）"),
+            color=alt.Color("member_name:N", title="メンバー"),
+            tooltip=[
+                alt.Tooltip("month:N", title="月"),
+                alt.Tooltip("member_name:N", title="メンバー"),
+                alt.Tooltip("amount:Q", title="支出", format=","),
+            ],
+        )
+        .properties(height=280)
+    )
+
+    st.altair_chart(member_chart, use_container_width=True)
+
+
+
     # ---- 月を選べるセレクトボックス（全幅）----
     months = sorted(df["month"].unique())
     default_index = len(months) - 1 if months else 0
@@ -97,6 +131,16 @@ else:
     # ---- 選択した月のデータを用意 ----
     filtered = df[df["month"] == selected_month].copy()
     filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
+
+    df["date"] = pd.to_datetime(df["date"])
+    df["month"] = df["date"].dt.to_period("M").astype(str)
+
+    # 全体の月別合計（すでにあるやつ）
+    month_total = df.groupby("month")["amount"].sum().reset_index()
+    month_total.rename(columns={"amount": "total_amount"}, inplace=True)
+
+
+
 
     # 2カラムレイアウト：左 = 明細＆合計、右 = 円グラフ
     left_col, right_col = st.columns([2, 1])
