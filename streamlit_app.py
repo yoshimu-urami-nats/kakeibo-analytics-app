@@ -32,6 +32,8 @@ st.markdown("---")
 
 @st.cache_data
 def load_transactions():
+
+    
     """SQLite から明細を読み込んで DataFrame にする"""
     conn = sqlite3.connect(DB_PATH)
     query = """
@@ -40,16 +42,38 @@ def load_transactions():
             date,
             amount,
             memo,
-            member_id
+            member_id,
+            category_id
         FROM transactions_transaction
     """
     df = pd.read_sql_query(query, conn, parse_dates=["date"])
     conn.close()
     return df
 
+@st.cache_data
+def load_category_master():
+
+    conn = sqlite3.connect(DB_PATH)
+    cat_df = pd.read_sql_query(
+        "SELECT id, name FROM transactions_category",
+        conn
+    )
+    conn.close()
+    return dict(zip(cat_df["id"], cat_df["name"]))
+
+
 
 # ---- データ読み込み ----
 df = load_transactions()
+
+# ★ カテゴリマスタを読み込んで、category_id → category_name に変換
+CATEGORY_NAME = load_category_master()
+
+if "category_id" in df.columns:
+    df["category_name"] = df["category_id"].map(CATEGORY_NAME).fillna("未分類")
+else:
+    # 念のため（まだ category_id が無いケース）
+    df["category_name"] = "未分類"
 
 if df.empty:
     st.warning("まだ明細データが入ってないみたい。")
@@ -132,6 +156,7 @@ else:
     filtered = df[df["month"] == selected_month].copy()
     filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
 
+
     df["date"] = pd.to_datetime(df["date"])
     df["month"] = df["date"].dt.to_period("M").astype(str)
 
@@ -183,7 +208,12 @@ else:
 
 
     # 右カラム：メンバー別円グラフ
-    with right_col:
+# 右カラム：メンバー別 / カテゴリ別 円グラフ
+with right_col:
+    tab_member, tab_category = st.tabs(["メンバー別", "カテゴリ別"])
+
+    # --- タブ1：メンバー別 ---
+    with tab_member:
         member_total = filtered.groupby("member_name")["amount"].sum()
 
         if not member_total.empty:
@@ -200,5 +230,33 @@ else:
             st.pyplot(fig)
         else:
             st.info("この月には明細がありません。")
+
+    # --- タブ2：カテゴリ別 ---
+    with tab_category:
+        category_total = filtered.groupby("category_name")["amount"].sum()
+
+        if not category_total.empty:
+            st.subheader(f"{selected_month} のカテゴリ別支出割合")
+
+            fig, ax = plt.subplots()
+            ax.pie(
+                category_total.values,
+                labels=category_total.index,
+                autopct="%1.1f%%",
+                startangle=90,
+            )
+            ax.axis("equal")  # 真円
+            st.pyplot(fig)
+        else:
+            st.info("この月にはカテゴリ情報がありません。")
+
+    with right_col:
+        # …円グラフの下あたりに
+        st.markdown("#### カテゴリ別 金額一覧")
+        st.dataframe(
+            category_total.reset_index().sort_values("amount", ascending=False),
+            use_container_width=True,
+        )
+
 
 
