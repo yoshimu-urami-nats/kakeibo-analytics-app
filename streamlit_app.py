@@ -6,9 +6,10 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import altair as alt
+import ipaexfont
 
 # 日本語フォント設定（Windows 想定）
-plt.rcParams["font.family"] = "Meiryo"
+plt.rcParams["font.family"] = "IPAexGothic"
 plt.rcParams["axes.unicode_minus"] = False  # マイナス記号の文字化け防止
 
 
