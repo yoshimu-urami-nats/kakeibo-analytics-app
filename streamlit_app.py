@@ -6,7 +6,6 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import altair as alt
-import ipaexfont
 import platform
 
 # 日本語フォント設定（Windows 想定）
