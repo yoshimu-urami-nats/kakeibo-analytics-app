@@ -216,3 +216,6 @@ data_raw/
 *.csv
 *.txt
 *.sqlite3
+
+# でもデモ用だけは Git に乗せる
+!demo_transactions.csv

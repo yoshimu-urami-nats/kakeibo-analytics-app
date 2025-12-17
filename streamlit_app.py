@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import sqlite3
 from pathlib import Path
 
@@ -22,6 +25,8 @@ MEMBER_NAME = {
 BASE_DIR = Path(__file__).parent
 DB_PATH = BASE_DIR / "db.sqlite3"
 
+MODE = os.getenv("KAKEIBO_MODE", "demo")  # デフォルトはデモモード
+
 st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
 
 st.title("📊 家計簿ダッシュボード")
@@ -32,9 +37,16 @@ st.markdown("---")
 
 @st.cache_data
 def load_transactions():
+    """デモ時はCSV、本番時はSQLiteから明細を読む"""
 
-    
-    """SQLite から明細を読み込んで DataFrame にする"""
+    if MODE == "demo":
+        # デモ用CSVを読む（Render / ポートフォリオ用）
+        csv_path = BASE_DIR / "demo_transactions.csv"
+        df = pd.read_csv(csv_path)
+        df["date"] = pd.to_datetime(df["date"])
+        return df
+
+    # それ以外（本番モード）は従来通りSQLiteから読む
     conn = sqlite3.connect(DB_PATH)
     query = """
         SELECT
@@ -42,8 +54,7 @@ def load_transactions():
             date,
             amount,
             memo,
-            member_id,
-            category_id
+            member_id
         FROM transactions_transaction
     """
     df = pd.read_sql_query(query, conn, parse_dates=["date"])
