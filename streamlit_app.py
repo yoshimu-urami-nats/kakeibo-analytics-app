@@ -2,8 +2,6 @@ import os
 from pathlib import Path
 
 import sqlite3
-from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -23,7 +21,13 @@ MEMBER_NAME = {
 
 # ---- DB へのパス設定 ----
 BASE_DIR = Path(__file__).parent
-DB_PATH = os.environ.get("KAIKEIBO_DB_PATH", "db.sqlite3")
+
+env_db = os.environ.get("KAIKEIBO_DB_PATH")
+if env_db:
+    DB_PATH = BASE_DIR / env_db
+else:
+    DB_PATH = BASE_DIR / "db.sqlite3"
+
 
 MODE = os.getenv("KAKEIBO_MODE", "demo")  # デフォルトはデモモード
 
@@ -41,7 +45,7 @@ def load_transactions():
 
     if MODE == "demo":
         # デモ用CSVを読む（Render / ポートフォリオ用）
-        csv_path = BASE_DIR / "demo_transactions.csv"
+        csv_path = BASE_DIR / "data_demo" / "demo_transactions.csv"
         df = pd.read_csv(csv_path)
         df["date"] = pd.to_datetime(df["date"])
         return df
@@ -54,18 +58,20 @@ def load_transactions():
             date,
             amount,
             memo,
-            member_id
+            member_id,
+            category_id      -- ★これを追加
         FROM transactions_transaction
     """
     df = pd.read_sql_query(query, conn, parse_dates=["date"])
     conn.close()
     return df
 
+
 @st.cache_data
 def load_category_master():
     # デモモード：DBに触らずCSVなどからカテゴリマスタを作る
     if MODE == "demo":
-        csv_path = BASE_DIR / "demo_transactions.csv"
+        csv_path = BASE_DIR / "data_demo" / "demo_transactions.csv"
         df = pd.read_csv(csv_path)
 
         # ↓ここは実際のカラム名に合わせて調整してね
@@ -108,7 +114,6 @@ else:
         st.dataframe(df.head())
 
     # 月別合計を出してみる
-    df["date"] = pd.to_datetime(df["date"])
     df["month"] = df["date"].dt.to_period("M").astype(str)
     month_total = df.groupby("month")["amount"].sum().reset_index()
     month_total.rename(columns={"amount": "total_amount"}, inplace=True)
@@ -182,107 +187,64 @@ else:
     filtered = df[df["month"] == selected_month].copy()
     filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
 
-
-    df["date"] = pd.to_datetime(df["date"])
-    df["month"] = df["date"].dt.to_period("M").astype(str)
-
     # 全体の月別合計（すでにあるやつ）
     month_total = df.groupby("month")["amount"].sum().reset_index()
     month_total.rename(columns={"amount": "total_amount"}, inplace=True)
-
-
-
 
     # 2カラムレイアウト：左 = 明細＆合計、右 = 円グラフ
     left_col, right_col = st.columns([2, 1])
 
     # 左カラム：合計 & 明細
     with left_col:
-        # 今月の合計
-        total_selected = int(filtered["amount"].sum())
-
-        # ------------- 前月比を計算 -------------
-        delta_text = None  # 表示なしの初期値
-
-        # months は既に上で作っている「全月一覧」
-        if selected_month in months:
-            idx = months.index(selected_month)
-
-            # 前の月が存在する場合のみ計算
-            if idx > 0:
-                prev_month = months[idx - 1]
-
-                # month_total（上で作った月別集計）から前月の金額を取得
-                prev_row = month_total[month_total["month"] == prev_month]["total_amount"]
-
-                if not prev_row.empty:
-                    prev_total = int(prev_row.iloc[0])
-
-                    diff = total_selected - prev_total  # 金額差
-                    if prev_total != 0:
-                        rate = diff / prev_total * 100
-                        delta_text = f"{diff:+,} 円（{rate:+.1f}%）"
-                    else:
-                        delta_text = f"{diff:+,} 円"
-
-        # ------------- 表示 -------------
-        st.markdown(f"### {selected_month} の合計支出")
-        st.metric("合計支出", f"{total_selected:,} 円", delta=delta_text)
-
-        st.subheader(f"{selected_month} の明細（先頭20件）")
+        ...
         st.dataframe(filtered[["date", "amount", "memo", "member_name"]].head(20))
 
-
-    # 右カラム：メンバー別円グラフ
-# 右カラム：メンバー別 / カテゴリ別 円グラフ
-with right_col:
-    tab_member, tab_category = st.tabs(["メンバー別", "カテゴリ別"])
-
-    # --- タブ1：メンバー別 ---
-    with tab_member:
-        member_total = filtered.groupby("member_name")["amount"].sum()
-
-        if not member_total.empty:
-            st.subheader(f"{selected_month} のメンバー別支出割合")
-
-            fig, ax = plt.subplots()
-            ax.pie(
-                member_total.values,
-                labels=member_total.index,
-                autopct="%1.1f%%",
-                startangle=90,
-            )
-            ax.axis("equal")  # 真円
-            st.pyplot(fig)
-        else:
-            st.info("この月には明細がありません。")
-
-    # --- タブ2：カテゴリ別 ---
-    with tab_category:
-        category_total = filtered.groupby("category_name")["amount"].sum()
-
-        if not category_total.empty:
-            st.subheader(f"{selected_month} のカテゴリ別支出割合")
-
-            fig, ax = plt.subplots()
-            ax.pie(
-                category_total.values,
-                labels=category_total.index,
-                autopct="%1.1f%%",
-                startangle=90,
-            )
-            ax.axis("equal")  # 真円
-            st.pyplot(fig)
-        else:
-            st.info("この月にはカテゴリ情報がありません。")
-
+    # 右カラム：メンバー別 / カテゴリ別 円グラフ
     with right_col:
-        # …円グラフの下あたりに
-        st.markdown("#### カテゴリ別 金額一覧")
-        st.dataframe(
-            category_total.reset_index().sort_values("amount", ascending=False),
-            use_container_width=True,
-        )
+        tab_member, tab_category = st.tabs(["メンバー別", "カテゴリ別"])
+
+        # --- タブ1：メンバー別 ---
+        with tab_member:
+            member_total = filtered.groupby("member_name")["amount"].sum()
+            if not member_total.empty:
+                st.subheader(f"{selected_month} のメンバー別支出割合")
+                fig, ax = plt.subplots()
+                ax.pie(
+                    member_total.values,
+                    labels=member_total.index,
+                    autopct="%1.1f%%",
+                    startangle=90,
+                )
+                ax.axis("equal")
+                st.pyplot(fig)
+            else:
+                st.info("この月には明細がありません。")
+
+        # --- タブ2：カテゴリ別 ---
+        with tab_category:
+            category_total = filtered.groupby("category_name")["amount"].sum()
+
+            if not category_total.empty:
+                st.subheader(f"{selected_month} のカテゴリ別支出割合")
+                fig, ax = plt.subplots()
+                ax.pie(
+                    category_total.values,
+                    labels=category_total.index,
+                    autopct="%1.1f%%",
+                    startangle=90,
+                )
+                ax.axis("equal")
+                st.pyplot(fig)
+
+                # 円グラフの下にテーブルを表示
+                st.markdown("#### カテゴリ別 金額一覧")
+                st.dataframe(
+                    category_total.reset_index().sort_values("amount", ascending=False),
+                    use_container_width=True,
+                )
+            else:
+                st.info("この月にはカテゴリ情報がありません。")
+
 
 
 
