@@ -35,3 +35,4 @@ tzdata==2025.2
 wcwidth==0.2.14
 streamlit
 matplotlib
+plotly>=5.18.0

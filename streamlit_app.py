@@ -7,6 +7,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import altair as alt
 import platform
+import plotly.express as px
 
 # 日本語フォント設定（Windows 想定）
 if platform.system() == "Windows":
@@ -210,17 +211,21 @@ else:
             member_total = filtered.groupby("member_name")["amount"].sum()
             if not member_total.empty:
                 st.subheader(f"{selected_month} のメンバー別支出割合")
-                fig, ax = plt.subplots()
-                ax.pie(
-                    member_total.values,
-                    labels=member_total.index,
-                    autopct="%1.1f%%",
-                    startangle=90,
+
+                # plotly用にDataFrame化
+                member_df = member_total.reset_index().rename(columns={"amount": "amount"})
+
+                fig = px.pie(
+                    member_df,
+                    names="member_name",
+                    values="amount",
                 )
-                ax.axis("equal")
-                st.pyplot(fig)
+                fig.update_traces(textinfo="percent+label")
+                st.plotly_chart(fig, use_container_width=True)
+
             else:
                 st.info("この月には明細がありません。")
+
 
         # --- タブ2：カテゴリ別 ---
         with tab_category:
@@ -228,15 +233,16 @@ else:
 
             if not category_total.empty:
                 st.subheader(f"{selected_month} のカテゴリ別支出割合")
-                fig, ax = plt.subplots()
-                ax.pie(
-                    category_total.values,
-                    labels=category_total.index,
-                    autopct="%1.1f%%",
-                    startangle=90,
+
+                category_df = category_total.reset_index().rename(columns={"amount": "amount"})
+
+                fig = px.pie(
+                    category_df,
+                    names="category_name",
+                    values="amount",
                 )
-                ax.axis("equal")
-                st.pyplot(fig)
+                fig.update_traces(textinfo="percent+label")
+                st.plotly_chart(fig, use_container_width=True)
 
                 # 円グラフの下にテーブルを表示
                 st.markdown("#### カテゴリ別 金額一覧")
@@ -246,6 +252,7 @@ else:
                 )
             else:
                 st.info("この月にはカテゴリ情報がありません。")
+
 
 
 
