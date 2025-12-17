@@ -23,7 +23,7 @@ MEMBER_NAME = {
 
 # ---- DB へのパス設定 ----
 BASE_DIR = Path(__file__).parent
-DB_PATH = BASE_DIR / "db.sqlite3"
+DB_PATH = os.environ.get("KAIKEIBO_DB_PATH", "db.sqlite3")
 
 MODE = os.getenv("KAKEIBO_MODE", "demo")  # デフォルトはデモモード
 
