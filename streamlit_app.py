@@ -63,14 +63,29 @@ def load_transactions():
 
 @st.cache_data
 def load_category_master():
+    # デモモード：DBに触らずCSVなどからカテゴリマスタを作る
+    if MODE == "demo":
+        csv_path = BASE_DIR / "demo_transactions.csv"
+        df = pd.read_csv(csv_path)
 
-    conn = sqlite3.connect(DB_PATH)
-    cat_df = pd.read_sql_query(
-        "SELECT id, name FROM transactions_category",
-        conn
-    )
-    conn.close()
+        # ↓ここは実際のカラム名に合わせて調整してね
+        # 例: demo_transactions.csv に "category_id", "category_name" がある場合
+        cat_df = (
+            df[["category_id", "category_name"]]
+            .drop_duplicates()
+            .rename(columns={"category_id": "id", "category_name": "name"})
+        )
+
+    # 家庭用モード：今まで通り SQLite から読む
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        query = "SELECT id, name FROM transactions_category"
+        cat_df = pd.read_sql_query(query, conn)
+        conn.close()
+
+    # {id: name} の dict を返す想定なら
     return dict(zip(cat_df["id"], cat_df["name"]))
+
 
 
 
