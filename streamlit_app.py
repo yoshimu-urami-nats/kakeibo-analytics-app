@@ -7,10 +7,12 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import altair as alt
 import ipaexfont
+import platform
 
 # 日本語フォント設定（Windows 想定）
-plt.rcParams["font.family"] = "IPAexGothic"
-plt.rcParams["axes.unicode_minus"] = False  # マイナス記号の文字化け防止
+if platform.system() == "Windows":
+    plt.rcParams["font.family"] = "Meiryo"  # ローカル用
+plt.rcParams["axes.unicode_minus"] = False
 
 
 # メンバーID対応表（今後DBから読むように拡張可）
