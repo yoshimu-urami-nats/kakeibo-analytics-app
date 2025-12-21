@@ -79,45 +79,8 @@ def load_transactions():
     return df
 
 
-# @st.cache_data
-# def load_category_master():
-#     # デモモード：DBに触らずCSVなどからカテゴリマスタを作る
-#     if MODE == "demo":
-#         csv_path = BASE_DIR / "data_demo" / "demo_transactions.csv"
-#         df = pd.read_csv(csv_path)
-
-#         # ↓ここは実際のカラム名に合わせて調整してね
-#         # 例: demo_transactions.csv に "category_id", "category_name" がある場合
-#         cat_df = (
-#             df[["category_id", "category_name"]]
-#             .drop_duplicates()
-#             .rename(columns={"category_id": "id", "category_name": "name"})
-#         )
-
-#     # 家庭用モード：今まで通り SQLite から読む
-#     else:
-#         conn = sqlite3.connect(DB_PATH)
-#         query = "SELECT id, name FROM transactions_category"
-#         cat_df = pd.read_sql_query(query, conn)
-#         conn.close()
-
-#     # {id: name} の dict を返す想定なら
-#     return dict(zip(cat_df["id"], cat_df["name"]))
-
-
-
-
 # ---- データ読み込み ----
 df = load_transactions()
-
-# # ★ カテゴリマスタを読み込んで、category_id → category_name に変換
-# CATEGORY_NAME = load_category_master()
-
-# if "category_id" in df.columns:
-#     df["category_name"] = df["category_id"].map(CATEGORY_NAME).fillna("未分類")
-# else:
-#     # 念のため（まだ category_id が無いケース）
-#     df["category_name"] = "未分類"
 
 if df.empty:
     st.warning("まだ明細データが入ってないみたい。")
