@@ -208,6 +208,8 @@ kakeibo-analytics-app/
 streamlit run streamlit_app.py
 ```
 
+※ローカル
+
 → 初回だけメール登録の質問が出るが、空のまま Enter で OK  
 → ブラウザが http://localhost:8501 を開く
 
