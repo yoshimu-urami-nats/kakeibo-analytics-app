@@ -4,9 +4,7 @@ Django や Python 開発でよく使う「お作法」「コマンド」「立�
 
 ---
 
-## 🔰 基本の概念
-
-### ● 仮想環境（venv）
+## 🟦 仮想環境（venv）
 プロジェクトごとに Python ライブラリを分ける仕組み。  
 Django や pandas はここに入れる。  
 クリーン環境で pip install -r requirements.txt を回すイメージ
@@ -57,16 +55,8 @@ deactivate
 ## 🔁 上記の流れで作業すれば、ローカル≒Render本番環境でテストできる
 
 ---
-# 🟦 2. Django の基本コマンド
-## ● プロジェクト作成
-```bash
-django-admin startproject プロジェクト名 .
-```
+# 🟦 Django
 
-## ● アプリ作成
-```bash
-python manage.py startapp アプリ名
-```
 
 ## ● サーバー起動
 ```bash
@@ -77,20 +67,17 @@ python manage.py runserver
 ```bash
 Ctrl + C
 ```
-※ 赤文字が出ても、警告なら気にしなくてOK。
 
 ## ● マイグレーション（DB構造反映）
 
-### 構造作成
-```bash
-python manage.py makemigrations
-```
-
-### 反映
+反映
 ```bash
 python manage.py migrate
 ```
 
+migrate してないDBを使おうとするとエラーが出るので注意
+
+---
 # 🟦 3. bash（ターミナル）でよく使う基礎操作
 ## ● カレントディレクトリ（今いる場所）
 ```bash
