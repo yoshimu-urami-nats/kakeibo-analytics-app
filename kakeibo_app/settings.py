@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 """
 Django settings for kakeibo_app project.
 
@@ -77,8 +80,18 @@ WSGI_APPLICATION = 'kakeibo_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv(
+            'DB_ENGINE',
+            'django.db.backends.sqlite3'
+        ),
+        'NAME': os.getenv(
+            'DB_NAME',
+            BASE_DIR / 'db.sqlite3'
+        ),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
 }
 
