@@ -32,15 +32,15 @@ DB_PATH = (BASE_DIR / env_db) if env_db else (BASE_DIR / "db.sqlite3")
 st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
 st.title("家計簿ダッシュボード")
 
-if MODE == "demo":
-    st.caption("デモCSVから集計中（ポートフォリオ用）")
-elif DATABASE_URL:
-    st.caption("Render(Postgres) から集計中（ポートフォリオ本番想定）")
+# どのデータソースで動いてるか（表示用）
+database_url = os.getenv("DATABASE_URL")
+if database_url:
+    source_label = "Postgres(Render)"
+elif MODE == "demo":
+    source_label = "CSV(デモ)"
 else:
-    st.caption("ローカルSQLiteから集計中（家庭用）")
-
-st.markdown("---")
-
+    source_label = "SQLite(ローカル)"
+    
 
 def _connect_postgres(database_url: str):
     """
@@ -99,6 +99,28 @@ def load_transactions():
 
 
 df = load_transactions()
+
+# 件数
+row_count = len(df)
+
+# 期間（min / max）
+if row_count > 0 and "date" in df.columns:
+    dt = pd.to_datetime(df["date"], errors="coerce")
+    date_min = dt.min()
+    date_max = dt.max()
+    if pd.notna(date_min) and pd.notna(date_max):
+        period_text = f"{date_min:%Y-%m-%d} 〜 {date_max:%Y-%m-%d}"
+    else:
+        period_text = "日付不明"
+else:
+    period_text = "データなし"
+
+st.caption(
+    f"データソース: {source_label} ｜ 件数: {row_count} ｜ 期間: {period_text}"
+)
+
+st.markdown("---")
+
 
 if df.empty:
     st.warning("まだ明細データが入ってないみたい。")
