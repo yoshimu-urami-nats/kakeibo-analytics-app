@@ -13,14 +13,6 @@ import psycopg2
 from urllib.parse import urlparse
 
 
-# 日本語フォント設定（Windows 想定）
-# ※matplotlib使ってないなら不要。使う時だけ戻す。
-# import matplotlib.pyplot as plt
-# if platform.system() == "Windows":
-#     plt.rcParams["font.family"] = "Meiryo"
-# plt.rcParams["axes.unicode_minus"] = False
-
-
 MEMBER_NAME = {
     1: "Aさん",
     2: "Bさん",
