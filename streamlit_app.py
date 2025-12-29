@@ -9,7 +9,7 @@ import altair as alt
 import plotly.express as px
 
 # Postgres接続（Render用）
-import psycopg2
+import psycopg
 from urllib.parse import urlparse
 
 
@@ -40,7 +40,7 @@ elif MODE == "demo":
     source_label = "CSV(デモ)"
 else:
     source_label = "SQLite(ローカル)"
-    
+
 
 def _connect_postgres(database_url: str):
     """
@@ -48,7 +48,7 @@ def _connect_postgres(database_url: str):
     postgres://user:pass@host:5432/dbname
     """
     u = urlparse(database_url)
-    return psycopg2.connect(
+    return psycopg.connect(
         dbname=u.path.lstrip("/"),
         user=u.username,
         password=u.password,
