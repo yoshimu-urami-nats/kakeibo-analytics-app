@@ -34,6 +34,6 @@ tzdata==2025.2
 wcwidth==0.2.14
 streamlit
 plotly>=5.18.0
-psycopg[binary]
+psycopg2-binary==2.9.9
 dj-database-url
 python-dotenv
