@@ -37,3 +37,4 @@ plotly>=5.18.0
 psycopg[binary]
 dj-database-url
 python-dotenv
+gunicorn
