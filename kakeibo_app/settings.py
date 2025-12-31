@@ -29,7 +29,8 @@ SECRET_KEY = 'django-insecure-i^a8a2pv*1mt-6c)-lr^k*pyj_i!=r&)qymhg3l8#^w#^+^39f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
+CSRF_TRUSTED_ORIGINS = ["https://kakeibo-django.onrender.com"]
 
 
 # Application definition
