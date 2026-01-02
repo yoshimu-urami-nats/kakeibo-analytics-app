@@ -1,14 +1,12 @@
 import os
 from pathlib import Path
-import platform
-import sqlite3
 
 import pandas as pd
 import streamlit as st
 import altair as alt
 import plotly.express as px
 
-# Postgres接続（Render用）
+# Postgres接続（Render用 / ローカルも同じ）
 import psycopg
 from urllib.parse import urlparse
 
@@ -22,31 +20,21 @@ MEMBER_NAME = {
 }
 
 BASE_DIR = Path(__file__).parent
-MODE = os.getenv("KAKEIBO_MODE", "demo")  # demo / local など
-DATABASE_URL = os.getenv("DATABASE_URL")  # Renderで設定する想定
-
-env_db = os.environ.get("KAIKEIBO_DB_PATH")
-DB_PATH = (BASE_DIR / env_db) if env_db else (BASE_DIR / "db.sqlite3")
+MODE = os.getenv("KAKEIBO_MODE", "prod")  # demo / prod
+DATABASE_URL = os.getenv("DATABASE_URL")  # 必須（demo以外）
 
 
 st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
 st.title("家計簿ダッシュボード")
 
 # どのデータソースで動いてるか（表示用）
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    source_label = "Postgres(Render)"
-elif MODE == "demo":
+if MODE == "demo":
     source_label = "CSV(デモ)"
 else:
-    source_label = "SQLite(ローカル)"
+    source_label = "Postgres"
 
 
 def _connect_postgres(database_url: str):
-    """
-    Renderの DATABASE_URL 例:
-    postgres://user:pass@host:5432/dbname
-    """
     u = urlparse(database_url)
     return psycopg.connect(
         dbname=u.path.lstrip("/"),
@@ -54,7 +42,7 @@ def _connect_postgres(database_url: str):
         password=u.password,
         host=u.hostname,
         port=u.port or 5432,
-        sslmode="require",  # Renderは基本これでOK
+        sslmode="require",
     )
 
 
@@ -62,14 +50,18 @@ def _connect_postgres(database_url: str):
 def load_transactions():
     """
     1) demo: CSV
-    2) DATABASE_URLあり: Postgres(Render)
-    3) それ以外: SQLite(ローカル)
+    2) それ以外: Postgres（DATABASE_URL必須）
     """
     if MODE == "demo":
         csv_path = BASE_DIR / "data_demo" / "demo_transactions.csv"
         df = pd.read_csv(csv_path)
         df["date"] = pd.to_datetime(df["date"])
         return df
+
+    if not DATABASE_URL:
+        # ここに来たら設定漏れなので、分かりやすく止める
+        st.error("DATABASE_URL が未設定です（demo以外はPostgreSQL必須）")
+        st.stop()
 
     query = """
     SELECT
@@ -84,18 +76,11 @@ def load_transactions():
         ON t.category_id = c.id
     """
 
-    # Render(Postgres)
-    if DATABASE_URL:
-        conn = _connect_postgres(DATABASE_URL)
-        df = pd.read_sql_query(query, conn, parse_dates=["date"])
-        conn.close()
-        return df
-
-    # ローカル(SQLite)
-    conn = sqlite3.connect(DB_PATH)
+    conn = _connect_postgres(DATABASE_URL)
     df = pd.read_sql_query(query, conn, parse_dates=["date"])
     conn.close()
     return df
+
 
 
 df = load_transactions()

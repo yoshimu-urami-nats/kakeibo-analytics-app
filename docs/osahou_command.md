@@ -165,15 +165,6 @@ qs = Transaction.objects.filter(category__isnull=True)
 
 ---
 
-# 🟦 7. きれいなサンプル DB を保存する方法
-
-### SQLite を丸ごとコピーするのが一番簡単
-
-- runserver を止める  
-- db.sqlite3 をコピーして保存（snapshot）
-
----
-
 # 🟩 8. Streamlit のお作法（基礎）
 
 ## ● インストール
@@ -189,7 +180,7 @@ Django プロジェクトのルート（manage.py と同じ階層）に置く：
 ```
 kakeibo-analytics-app/
 ├─ manage.py
-├─ db.sqlite3
+├─ db.
 └─ streamlit_app.py
 ```
 
@@ -213,19 +204,6 @@ Ctrl + C
 ## ● コードを保存すると自動で反映  
 反映されない場合は右上の **Rerun** を押す
 
-## ● SQLite を読む基本形
-
-```python
-import sqlite3
-import pandas as pd
-from pathlib import Path
-
-DB_PATH = Path(__file__).parent / "db.sqlite3"
-
-conn = sqlite3.connect(DB_PATH)
-df = pd.read_sql_query("SELECT * FROM transactions_transaction", conn)
-conn.close()
-```
 
 ## ● よく使う加工
 

@@ -64,9 +64,9 @@ kakeibo-analytics-app/
 ├── requirements.txt
 ├── data_demo/
 │   ├── demo_transactions.csv
-│   └── demo.db.sqlite3
+│   └── demo.db.
 ├── data_real/        # gitignore
-│   └── real.db.sqlite3
+│   └── real.db.
 ├── docs/
 └── README.md
 ```
