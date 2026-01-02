@@ -39,6 +39,7 @@
 ##  Live Demo
 
  https://kakeibo-analytics-app.onrender.com/
+ 
 
 ※ デモでは個人情報を含まないダミーデータを使用しています。
 
