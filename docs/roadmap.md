@@ -162,3 +162,25 @@ is_closed（確定フラグ）
 ## バックアップ
 - 月次バックアップとして、import_month 単位でCSV書き出しできるようにする
 - 例：backup/2025-12-transactions.csv
+---
+DB（transactions_transaction）最終形
+
+id,date,shop,amount,member_id,category_id,memo,import_month,is_closed
+
+id：主キー（Djangoが自動で作るのでモデルに書かなくてOK）
+
+date：DateField（表示は yyyy/mm/dd(曜日) に整形して出す）
+
+shop：CharField
+
+amount：IntegerField
+
+member：ForeignKey → DB列として member_id ができる
+
+category：ForeignKey → DB列として category_id ができる
+
+memo：CharField（空OK）
+
+import_month：DateField（月初日運用がラク。表示は yyyy/mm）
+
+is_closed：BooleanField（確定済み）

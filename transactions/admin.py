@@ -1,16 +1,13 @@
 from django.contrib import admin
-from .models import Transaction, Category
-
-
-@admin.register(Transaction)
-class TransactionAdmin(admin.ModelAdmin):
-    list_display = ("id", "date", "shop", "amount", "member", "category")
-    list_filter = ("member", "date")
-    search_fields = ("shop", "memo")
-    list_select_related = ("member",)
+from .models import Category, Transaction
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "type")
-    list_filter = ("type",)
+    list_display = ("id", "name")
     search_fields = ("name",)
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ("id", "date", "shop", "amount", "member", "category", "import_month", "is_closed")
+    list_filter = ("member", "category", "is_closed", "import_month")
+    search_fields = ("shop", "memo")
