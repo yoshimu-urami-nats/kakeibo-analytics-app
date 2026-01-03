@@ -6,6 +6,9 @@ import streamlit as st
 import altair as alt
 import plotly.express as px
 
+from dotenv import load_dotenv
+load_dotenv()  # カレント直下の .env を読む
+
 # Postgres接続（Render用 / ローカルも同じ）
 import psycopg
 from urllib.parse import urlparse
@@ -20,19 +23,14 @@ MEMBER_NAME = {
 }
 
 BASE_DIR = Path(__file__).parent
-MODE = os.getenv("KAKEIBO_MODE", "prod")  # demo / prod
-DATABASE_URL = os.getenv("DATABASE_URL")  # 必須（demo以外）
+DATABASE_URL = os.getenv("DATABASE_URL")  # 必須
 
 
 st.set_page_config(page_title="家計簿ダッシュボード", layout="wide")
 st.title("家計簿ダッシュボード")
 
 # どのデータソースで動いてるか（表示用）
-if MODE == "demo":
-    source_label = "CSV(デモ)"
-else:
-    source_label = "Postgres"
-
+source_label = "Postgres"
 
 def _connect_postgres(database_url: str):
     u = urlparse(database_url)
@@ -48,19 +46,10 @@ def _connect_postgres(database_url: str):
 
 @st.cache_data
 def load_transactions():
-    """
-    1) demo: CSV
-    2) それ以外: Postgres（DATABASE_URL必須）
-    """
-    if MODE == "demo":
-        csv_path = BASE_DIR / "data_demo" / "demo_transactions.csv"
-        df = pd.read_csv(csv_path)
-        df["date"] = pd.to_datetime(df["date"])
-        return df
 
     if not DATABASE_URL:
         # ここに来たら設定漏れなので、分かりやすく止める
-        st.error("DATABASE_URL が未設定です（demo以外はPostgreSQL必須）")
+        st.error("DATABASE_URL が未設定です。(.env か Render の環境変数に設定してね)")
         st.stop()
 
     query = """
