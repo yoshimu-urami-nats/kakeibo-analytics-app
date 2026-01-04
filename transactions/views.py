@@ -53,6 +53,7 @@ def transaction_list(request):
             return redirect("transactions:list")
 
         f = form.cleaned_data["csv_file"]
+        source_file = getattr(f, "name", "")  # 例: 202601.csv
 
         created = 0
         skipped = 0
@@ -97,15 +98,16 @@ def transaction_list(request):
                         shop=shop,
                         amount=amount,
                         memo="",
-                        import_month=_first_day_of_month(d),
+                        source_file=source_file,
                         is_closed=False,
                         member=None,    # ← null許可にしたからOK
-                        category=None,  # ← null許可にしたからOK
+                        category=None,  # ← null許可にしたからOK                        
                     )
                     created += 1
 
-                except Exception:
+                except Exception as e:
                     errors += 1
+                    print("IMPORT ERROR:", row_index, row, repr(e))
 
         except Exception as e:
             messages.error(request, f"CSVの読み込みで落ちた: {e}")

@@ -8,6 +8,6 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ("id", "date", "shop", "amount", "member", "category", "import_month", "is_closed")
-    list_filter = ("member", "category", "is_closed", "import_month")
+    list_display = ("id", "date", "shop", "amount", "member", "category", "source_file", "is_closed")
+    list_filter = ("member", "category", "is_closed", "source_file")
     search_fields = ("shop", "memo")

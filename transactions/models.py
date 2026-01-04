@@ -33,7 +33,7 @@ class Transaction(models.Model):
     )
 
     memo = models.TextField("メモ", blank=True, default="")
-    import_month = models.DateField("インポート月")
+    source_file = models.CharField("ファイル名", max_length=255, blank=True, default="")
     is_closed = models.BooleanField("確定済みか", default=False)
 
     class Meta:

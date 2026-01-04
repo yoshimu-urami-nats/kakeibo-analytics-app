@@ -52,7 +52,7 @@
       <th>カテゴリID</th>
 
       <th>メモ</th>
-      <th>インポート月</th>
+      <th>ファイル名</th>
       <th>確定済みか</th>
     </tr>
   </thead>
@@ -72,7 +72,7 @@
         <td>{{ t.category_id|default:"-" }}</td>
 
         <td>{{ t.memo }}</td>
-        <td>{{ t.import_month_label }}</td>
+        <td>{{ t.source_file }}</td>
         <td>{{ t.is_closed }}</td>
       </tr>
     {% empty %}
