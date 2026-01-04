@@ -3,19 +3,29 @@
 {% block title %}明細一覧{% endblock %}
 
 {% block content %}
-<h2>明細一覧</h2>
-
-<p>
-  <a href="{% url 'transactions:to_confirm' %}">要確認（未CK）明細だけを見る</a>
-</p>
 
 <p>
     <a href="{% url 'home' %}">← トップに戻る</a>
-    <a href="{% url 'transactions:create' %}">明細を新しく登録する</a>
-    <a href="{% url 'transactions:unassigned' %}">未仕分けの明細を仕分けする</a>
-    <a href="{% url 'transactions:upload_csv' %}">CSVを取り込む</a>
-    <a href="{% url 'transactions:monthly_summary' %}">カテゴリ別サマリを見る</a>
 </p>
+
+<hr>
+
+<h2>CSV取り込み</h2>
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ upload_form.csv_file }}
+  <button type="submit">CSVを取り込む</button>
+</form>
+
+<hr>
 
 <div class="transaction-search">
   <label for="transactionSearchInput">明細を検索：</label>
@@ -26,37 +36,49 @@
   />
 </div>
 
-
-<table id="transactionTable" class="kakeibo-table">
+<h2>明細一覧</h2>
+<table>
+  <thead>
     <tr>
-        <th>日付</th>
-        <th>店名・サービス名</th>
-        <th>金額</th>
-        <th>誰の出費か</th>
-        <th>カテゴリ</th>
-        <th>判定方法</th>
-        <th>メモ</th>
+      <th>ID</th>
+      <th>日付</th>
+      <th>店名・サービス名</th>
+      <th>金額</th>
+
+      <th>メンバー</th>
+      <th>メンバーID</th>
+
+      <th>カテゴリ</th>
+      <th>カテゴリID</th>
+
+      <th>メモ</th>
+      <th>インポート月</th>
+      <th>確定済みか</th>
     </tr>
-    {% for t in transactions %}
-    <tr>
-        <td>{{ t.formatted_date }}</td>
-        <td>{{ t.shop }}</td>
-        <td class="num">{{ t.amount }} 円</td>
-        <td>{{ t.member.short_name }}</td>
-        <td>{{ t.category }}</td>
+  </thead>
 
-        <td>
-            {{ t.get_decided_by_display }}
-            {# Django が自動で choices の日本語ラベルを返してくれるやつ #}
-        </td>
+  <tbody>
+    {% for t in transactions %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.date }}</td>
+        <td>{{ t.shop }}</td>
+        <td>{{ t.amount }}</td>
+
+        <td>{% if t.member %}{{ t.member.name }}{% else %}-{% endif %}</td>
+        <td>{{ t.member_id|default:"-" }}</td>
+
+        <td>{% if t.category %}{{ t.category.name }}{% else %}-{% endif %}</td>
+        <td>{{ t.category_id|default:"-" }}</td>
 
         <td>{{ t.memo }}</td>
-    </tr>
+        <td>{{ t.import_month }}</td>
+        <td>{{ t.is_closed }}</td>
+      </tr>
     {% empty %}
-    <tr>
-        <td colspan="7">まだ明細は登録されていません。</td>
-    </tr>
+      <tr><td colspan="11">まだ明細は登録されていません。</td></tr>
     {% endfor %}
+  </tbody>
 </table>
 
 <script>
