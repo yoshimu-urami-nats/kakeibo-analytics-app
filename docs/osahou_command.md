@@ -157,10 +157,28 @@ exit()
 quit()
 ```
 
-## ● よく使う操作例
+## ● DBのデータのみ削除・採番リセット(Shell)
+```python
+python manage.py shell
+```
+
+データ削除
 ```python
 from transactions.models import Transaction
-qs = Transaction.objects.filter(category__isnull=True)
+Transaction.objects.all().delete()
+```
+✅ transactions_transaction テーブルの「行（データ）」だけ削除  
+❌ テーブル構造は消えない  
+❌ Member / Category / User / auth 系は一切触らない  
+
+採番（ID）を 1 からやり直す方法（Postgres)
+```python
+from django.db import connection
+
+with connection.cursor() as cursor:
+    cursor.execute(
+        "SELECT setval(pg_get_serial_sequence('transactions_transaction','id'), 1, false);"
+    )
 ```
 
 ---

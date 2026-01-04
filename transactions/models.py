@@ -1,6 +1,6 @@
 from django.db import models
 from members.models import Member
-
+from datetime import date as date_class
 
 class Category(models.Model):
     name = models.CharField("カテゴリ名", max_length=50)
@@ -43,3 +43,13 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.date} {self.shop} {self.amount}円"
+    
+    @property
+    def date_label(self):
+        youbi = ["月", "火", "水", "木", "金", "土", "日"]
+        w = youbi[self.date.weekday()]
+        return self.date.strftime(f"%Y/%m/%d({w})")
+
+    @property
+    def import_month_label(self):
+        return self.import_month.strftime("%Y/%m")
