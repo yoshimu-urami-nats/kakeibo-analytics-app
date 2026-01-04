@@ -31,6 +31,18 @@ def _parse_amount(s: str) -> int:
 def _first_day_of_month(d: date) -> date:
     return d.replace(day=1)
 
+def _decode_csv_bytes(b: bytes) -> str:
+    """
+    CSVの文字コードが UTF-8 / UTF-8(BOM付き) / CP932(Shift_JIS系) どれでも読めるようにする
+    """
+    for enc in ("utf-8-sig", "utf-8", "cp932", "shift_jis"):
+        try:
+            return b.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    # 最後の手段：読めない文字は落として読み進める（ログ用途）
+    return b.decode("cp932", errors="replace")
+
 
 @require_http_methods(["GET", "POST"])
 def transaction_list(request):
@@ -47,8 +59,10 @@ def transaction_list(request):
         errors = 0
 
         try:
-            # BOM付きでも読めるように utf-8-sig
-            text = f.read().decode("utf-8-sig")
+            f.seek(0)
+            raw = f.read()
+
+            text = _decode_csv_bytes(raw)
             reader = csv.reader(io.StringIO(text))
 
             for row_index, row in enumerate(reader, start=1):
