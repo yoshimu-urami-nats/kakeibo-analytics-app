@@ -10,6 +10,9 @@ from django.views.decorators.http import require_http_methods
 from .forms import CSVUploadForm
 from .models import Transaction
 
+from transactions.rules import guess_category
+from transactions.models import Category
+
 
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
@@ -93,15 +96,22 @@ def transaction_list(request):
                     d = _parse_date(date_str)
                     amount = _parse_amount(amount_str)
 
+                    # 例: shop は CSV から取った店名
+                    category_name = guess_category(shop)
+                    category_obj = None
+                    if category_name:
+                        category_obj = Category.objects.filter(name=category_name).first()
+
                     Transaction.objects.create(
                         date=d,
                         shop=shop,
                         amount=amount,
+                        category=category_obj,   # ←ここで自動割当
                         memo="",
                         source_file=source_file,
                         is_closed=False,
                         member=None,    # ← null許可にしたからOK
-                        category=None,  # ← null許可にしたからOK                        
+                                              
                     )
                     created += 1
 
