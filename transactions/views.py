@@ -8,10 +8,8 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .forms import CSVUploadForm
-from .models import Transaction
-
-from transactions.rules import guess_category
-from transactions.models import Category
+from .models import Transaction,Category
+from .rules import guess_category
 
 
 def _parse_date(s: str) -> date:
@@ -62,6 +60,12 @@ def transaction_list(request):
         skipped = 0
         errors = 0
 
+        # 先にカテゴリを全部辞書にしておく（name -> Category）
+        category_map = {c.name: c for c in Category.objects.all()}
+
+        # まとめて作る用
+        to_create = []
+
         try:
             f.seek(0)
             raw = f.read()
@@ -96,33 +100,39 @@ def transaction_list(request):
                     d = _parse_date(date_str)
                     amount = _parse_amount(amount_str)
 
-                    # 例: shop は CSV から取った店名
-                    category_name = guess_category(shop)
-                    category_obj = None
-                    if category_name:
-                        category_obj = Category.objects.filter(name=category_name).first()
+                    # カテゴリ自動推定（店名から）
+                    category_name = guess_category(shop)  # ← ここ重要
+                    category_obj = category_map.get(category_name) if category_name else None
 
-                    Transaction.objects.create(
-                        date=d,
-                        shop=shop,
-                        amount=amount,
-                        category=category_obj,   # ←ここで自動割当
-                        memo="",
-                        source_file=source_file,
-                        is_closed=False,
-                        member=None,    # ← null許可にしたからOK
-                                              
+                    to_create.append(
+                        Transaction(
+                            date=d,
+                            shop=shop,
+                            amount=amount,
+                            memo="",
+                            source_file=source_file,
+                            category=category_obj,
+                            member=None,
+                            is_closed=False,
+                        )
                     )
-                    created += 1
+                    
 
                 except Exception as e:
                     errors += 1
                     print("IMPORT ERROR:", row_index, row, repr(e))
 
         except Exception as e:
-            messages.error(request, f"CSVの読み込みで落ちた: {e}")
+            messages.error(request, f"CSVの読み込みに失敗した: {e}")
             return redirect("transactions:list")
 
+        # まとめてINSERT
+        if to_create:
+            Transaction.objects.bulk_create(to_create, batch_size=1000)
+
+        created = len(to_create)
+
+    
         messages.success(
             request,
             f"CSV取り込み完了！ 追加 {created} / スキップ {skipped} / エラー {errors}"
