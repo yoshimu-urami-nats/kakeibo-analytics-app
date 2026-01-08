@@ -8,8 +8,8 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from .forms import CSVUploadForm
-from .models import Transaction,Category
-from .rules import guess_category
+from .models import Transaction,Category,Member
+from .rules import guess_category, guess_member, is_derm_clinic
 
 
 def _parse_date(s: str) -> date:
@@ -60,25 +60,99 @@ def transaction_list(request):
         skipped = 0
         errors = 0
 
-        # 先にカテゴリを全部辞書にしておく（name -> Category）
-        category_map = {c.name: c for c in Category.objects.all()}
+        # # 先にカテゴリを全部辞書にしておく（name -> Category）
+        # category_map = {c.name: c for c in Category.objects.all()}
+        # member_map = {m.name: m for m in Member.objects.all()}
 
-        # まとめて作る用
-        to_create = []
+        # # まとめて作る用
+        # to_create = []
+
+        # try:
+        #     f.seek(0)
+        #     raw = f.read()
+
+        #     text = _decode_csv_bytes(raw)
+        #     reader = csv.reader(io.StringIO(text))
+
+        #     for row_index, row in enumerate(reader, start=1):
+        #         # 本番仕様：1行目不要 → 無条件で飛ばす
+        #         if row_index == 1:
+        #             continue
+
+        #         # 空行はスキップ
+        #         if not row or all((c or "").strip() == "" for c in row):
+        #             skipped += 1
+        #             continue
+
+        #         # 左から3列だけ使う（足りなければスキップ）
+        #         if len(row) < 3:
+        #             skipped += 1
+        #             continue
+
+        #         date_str = row[0].strip()
+        #         shop = row[1].strip()
+        #         amount_str = row[2].strip()
+
+        #         if not date_str or not shop or not amount_str:
+        #             skipped += 1
+        #             continue
+
+        #         try:
+        #             d = _parse_date(date_str)
+        #             amount = _parse_amount(amount_str)
+
+        #             # カテゴリ自動推定（店名から）
+        #             category_name = guess_category(shop)  # ← ここ重要
+        #             category_obj = category_map.get(category_name) if category_name else None
+
+        #             to_create.append(
+        #                 Transaction(
+        #                     date=d,
+        #                     shop=shop,
+        #                     amount=amount,
+        #                     memo="",
+        #                     source_file=source_file,
+        #                     category=category_obj,
+        #                     member=None,
+        #                     is_closed=False,
+        #                 )
+        #             )
+                    
+
+        #         except Exception as e:
+        #             errors += 1
+        #             print("IMPORT ERROR:", row_index, row, repr(e))
+
+        # except Exception as e:
+        #     messages.error(request, f"CSVの読み込みに失敗した: {e}")
+        #     return redirect("transactions:list")
+
+        # # まとめてINSERT
+        # if to_create:
+        #     Transaction.objects.bulk_create(to_create, batch_size=1000)
+
+        # created = len(to_create)
+
+        # 先にカテゴリ/メンバーを全件辞書にしておく（DBアクセスを減らす）
+        category_map = {c.name: c for c in Category.objects.all()}
+        member_map = {m.name: m for m in Member.objects.all()}
+
+        # 1) CSVを一旦パースして溜める + 皮膚科の「同日判定」用に日付を集める
+        parsed_rows = []
+        derm_dates = set()
 
         try:
             f.seek(0)
             raw = f.read()
-
             text = _decode_csv_bytes(raw)
             reader = csv.reader(io.StringIO(text))
 
             for row_index, row in enumerate(reader, start=1):
-                # 本番仕様：1行目不要 → 無条件で飛ばす
+                # 1行目はヘッダ想定（不要なら削除OK）
                 if row_index == 1:
                     continue
 
-                # 空行はスキップ
+                # 空行スキップ
                 if not row or all((c or "").strip() == "" for c in row):
                     skipped += 1
                     continue
@@ -100,37 +174,48 @@ def transaction_list(request):
                     d = _parse_date(date_str)
                     amount = _parse_amount(amount_str)
 
-                    # カテゴリ自動推定（店名から）
-                    category_name = guess_category(shop)  # ← ここ重要
-                    category_obj = category_map.get(category_name) if category_name else None
+                    parsed_rows.append((d, shop, amount))
 
-                    to_create.append(
-                        Transaction(
-                            date=d,
-                            shop=shop,
-                            amount=amount,
-                            memo="",
-                            source_file=source_file,
-                            category=category_obj,
-                            member=None,
-                            is_closed=False,
-                        )
-                    )
-                    
+                    # 皮膚科が同日にあるか判定するため、日付を覚える
+                    if is_derm_clinic(shop):
+                        derm_dates.add(d)
 
                 except Exception as e:
                     errors += 1
                     print("IMPORT ERROR:", row_index, row, repr(e))
 
         except Exception as e:
-            messages.error(request, f"CSVの読み込みに失敗した: {e}")
+            messages.error(request, f"CSVの読み込みで落ちた: {e}")
             return redirect("transactions:list")
 
-        # まとめてINSERT
+
+        # 2) ルールでカテゴリ/メンバーを割り当てて一括INSERT
+        to_create = []
+
+        for d, shop, amount in parsed_rows:
+            category_name = guess_category(shop)
+            category_obj = category_map.get(category_name) if category_name else None
+
+            member_name = guess_member(shop, d, derm_dates)
+            member_obj = member_map.get(member_name) if member_name else None
+
+            to_create.append(
+                Transaction(
+                    date=d,
+                    shop=shop,
+                    amount=amount,
+                    memo="",
+                    source_file=source_file,
+                    category=category_obj,
+                    member=member_obj,
+                    is_closed=False,
+                )
+            )
+
         if to_create:
             Transaction.objects.bulk_create(to_create, batch_size=1000)
+            created = len(to_create)
 
-        created = len(to_create)
 
     
         messages.success(
