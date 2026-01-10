@@ -60,79 +60,6 @@ def transaction_list(request):
         skipped = 0
         errors = 0
 
-        # # 先にカテゴリを全部辞書にしておく（name -> Category）
-        # category_map = {c.name: c for c in Category.objects.all()}
-        # member_map = {m.name: m for m in Member.objects.all()}
-
-        # # まとめて作る用
-        # to_create = []
-
-        # try:
-        #     f.seek(0)
-        #     raw = f.read()
-
-        #     text = _decode_csv_bytes(raw)
-        #     reader = csv.reader(io.StringIO(text))
-
-        #     for row_index, row in enumerate(reader, start=1):
-        #         # 本番仕様：1行目不要 → 無条件で飛ばす
-        #         if row_index == 1:
-        #             continue
-
-        #         # 空行はスキップ
-        #         if not row or all((c or "").strip() == "" for c in row):
-        #             skipped += 1
-        #             continue
-
-        #         # 左から3列だけ使う（足りなければスキップ）
-        #         if len(row) < 3:
-        #             skipped += 1
-        #             continue
-
-        #         date_str = row[0].strip()
-        #         shop = row[1].strip()
-        #         amount_str = row[2].strip()
-
-        #         if not date_str or not shop or not amount_str:
-        #             skipped += 1
-        #             continue
-
-        #         try:
-        #             d = _parse_date(date_str)
-        #             amount = _parse_amount(amount_str)
-
-        #             # カテゴリ自動推定（店名から）
-        #             category_name = guess_category(shop)  # ← ここ重要
-        #             category_obj = category_map.get(category_name) if category_name else None
-
-        #             to_create.append(
-        #                 Transaction(
-        #                     date=d,
-        #                     shop=shop,
-        #                     amount=amount,
-        #                     memo="",
-        #                     source_file=source_file,
-        #                     category=category_obj,
-        #                     member=None,
-        #                     is_closed=False,
-        #                 )
-        #             )
-                    
-
-        #         except Exception as e:
-        #             errors += 1
-        #             print("IMPORT ERROR:", row_index, row, repr(e))
-
-        # except Exception as e:
-        #     messages.error(request, f"CSVの読み込みに失敗した: {e}")
-        #     return redirect("transactions:list")
-
-        # # まとめてINSERT
-        # if to_create:
-        #     Transaction.objects.bulk_create(to_create, batch_size=1000)
-
-        # created = len(to_create)
-
         # 先にカテゴリ/メンバーを全件辞書にしておく（DBアクセスを減らす）
         category_map = {c.name: c for c in Category.objects.all()}
         member_map = {m.name: m for m in Member.objects.all()}
@@ -226,9 +153,18 @@ def transaction_list(request):
 
     # GET
     form = CSVUploadForm()
-    transactions = Transaction.objects.all()
+    
+    latest_source = Transaction.objects.order_by("-id").values_list("source_file", flat=True).first()
+
+    transactions = (
+        Transaction.objects
+        .select_related("category", "member")
+        .filter(source_file=latest_source) if latest_source else Transaction.objects.none()
+    )
+
     return render(
         request,
         "transactions/transaction_list.html",
         {"transactions": transactions, "upload_form": form},
     )
+
