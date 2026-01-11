@@ -25,6 +25,10 @@
   <button type="submit">CSVを取り込む</button>
 </form>
 
+{% if edit_mode and transactions|length == 0 %}
+  <p>未割当てはありません（最新ファイル分）</p>
+{% endif %}
+
 <hr>
 
 <div class="transaction-search">
@@ -35,6 +39,19 @@
     placeholder="カテゴリ / メモ / 店名 / 金額 などで絞り込み"
   />
 </div>
+
+<div style="display:flex; gap:12px; align-items:center; margin: 12px 0;">
+  {% if edit_mode %}
+    <a href="{% url 'transactions:list' %}">編集モード: ON（クリックでOFF）</a>
+  {% else %}
+    <a href="{% url 'transactions:list' %}?edit=1">編集モード: OFF（クリックでON）</a>
+  {% endif %}
+
+  {% if latest_source %}
+    <span>対象ファイル: {{ latest_source }}</span>
+  {% endif %}
+</div>
+
 
 <h2>明細一覧</h2>
 <table id="transactionTable" class="transaction-table">

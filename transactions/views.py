@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 from .forms import CSVUploadForm
 from .models import Transaction,Category,Member
 from .rules import guess_category, guess_member, is_derm_clinic
-
+from django.db.models import Q
 
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
@@ -151,20 +151,59 @@ def transaction_list(request):
         )
         return redirect("transactions:list")
 
+    # # GET
+    # form = CSVUploadForm()
+
+    # latest_source = Transaction.objects.order_by("-id").values_list("source_file", flat=True).first()
+
+    # transactions = (
+    #     Transaction.objects
+    #     .select_related("category", "member")
+    #     .filter(source_file=latest_source) if latest_source else Transaction.objects.none()
+    # )
+
+    # return render(
+    #     request,
+    #     "transactions/transaction_list.html",
+    #     {"transactions": transactions, "upload_form": form},
+    # )
+
     # GET
     form = CSVUploadForm()
-    
-    latest_source = Transaction.objects.order_by("-id").values_list("source_file", flat=True).first()
 
-    transactions = (
+    edit_mode = request.GET.get("edit") == "1"
+
+    latest_source = (
+        Transaction.objects
+        .exclude(source_file="")
+        .order_by("-id")
+        .values_list("source_file", flat=True)
+        .first()
+    )
+
+    qs = (
         Transaction.objects
         .select_related("category", "member")
-        .filter(source_file=latest_source) if latest_source else Transaction.objects.none()
     )
+
+    if latest_source:
+        qs = qs.filter(source_file=latest_source)
+    else:
+        qs = Transaction.objects.none()
+
+    # 編集モードONなら、未割当てだけ（カテゴリ or メンバーがNULL）
+    if edit_mode:
+        qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
+
+    transactions = qs
 
     return render(
         request,
         "transactions/transaction_list.html",
-        {"transactions": transactions, "upload_form": form},
+        {
+            "transactions": transactions,
+            "upload_form": form,
+            "edit_mode": edit_mode,
+            "latest_source": latest_source,
+        },
     )
-
