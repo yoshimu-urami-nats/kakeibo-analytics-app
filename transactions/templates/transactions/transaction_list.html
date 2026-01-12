@@ -57,6 +57,10 @@
 <table id="transactionTable" class="transaction-table">
   <thead>
     <tr>
+      {% if edit_mode %}
+        <th><input type="checkbox" id="checkAll"></th>
+      {% endif %}
+
       <th>ID</th>
       <th>日付</th>
       <th>店名・サービス名</th>
@@ -77,6 +81,12 @@
   <tbody>
     {% for t in transactions %}
       <tr>
+        {% if edit_mode %}
+          <td>
+            <input type="checkbox" class="row-check" name="selected_ids" value="{{ t.id }}">
+          </td>
+        {% endif %}
+
         <td>{{ t.id }}</td>
         <td>{{ t.date_label }}</td>
         <td>{{ t.shop }}</td>
@@ -93,31 +103,32 @@
         <td>{{ t.is_closed }}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="11">まだ明細は登録されていません。</td></tr>
+      <tr>
+        <td colspan="{% if edit_mode %}12{% else %}11{% endif %}">
+          まだ明細は登録されていません。
+        </td>
+      </tr>
     {% endfor %}
   </tbody>
 </table>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const input = document.getElementById("transactionSearchInput");
-    const table = document.getElementById("transactionTable");
-    if (!input || !table) return;
+  const input = document.getElementById("transactionSearchInput");
+  const table = document.getElementById("transactionTable");
+  if (!input || !table) return;
 
-    // すべての行を取得
-    const allRows = Array.from(table.querySelectorAll("tr"));
+  //  データ行だけ（thead除外）
+  const dataRows = Array.from(table.querySelectorAll("tbody tr"));
 
-    // 最初の行（ヘッダー）は除外、それ以降がデータ
-    const dataRows = allRows.slice(1);
+  input.addEventListener("input", function () {
+    const keyword = input.value.trim().toLowerCase();
 
-    input.addEventListener("input", function () {
-        const keyword = input.value.trim().toLowerCase();
-
-        dataRows.forEach((row) => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(keyword) ? "" : "none";
-        });
+    dataRows.forEach((row) => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(keyword) ? "" : "none";
     });
+  });
 });
 </script>
 
