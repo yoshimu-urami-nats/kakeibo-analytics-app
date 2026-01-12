@@ -52,6 +52,42 @@
   {% endif %}
 </div>
 
+{% if edit_mode %}
+<form method="post" id="bulkForm" style="margin: 10px 0;">
+  {% csrf_token %}
+
+  <!-- 選択された行IDを詰める場所（JSで入れる） -->
+  <input type="hidden" name="selected_ids" id="selectedIds">
+
+  <label>カテゴリ：</label>
+  <select name="category_id" id="bulkCategory">
+    <option value="">-- 選択 --</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" name="bulk_action" value="category">
+    カテゴリ一括適用
+  </button>
+
+  <span style="margin-left:12px;"></span>
+
+  <label>メンバー：</label>
+  <select name="member_id" id="bulkMember">
+    <option value="">-- 選択 --</option>
+    {% for m in members %}
+      <option value="{{ m.id }}">{{ m.name }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit" name="bulk_action" value="member">
+    メンバー一括適用
+  </button>
+</form>
+{% endif %}
+
+
 
 <h2>明細一覧</h2>
 <table id="transactionTable" class="transaction-table">
@@ -83,7 +119,7 @@
       <tr>
         {% if edit_mode %}
           <td>
-            <input type="checkbox" class="row-check" name="selected_ids" value="{{ t.id }}">
+            <input type="checkbox" class="row-check" value="{{ t.id }}">
           </td>
         {% endif %}
 
@@ -151,6 +187,34 @@ document.addEventListener("DOMContentLoaded", function () {
       row.style.display = text.includes(keyword) ? "" : "none";
     });
   });
+
+  const bulkForm = document.getElementById("bulkForm");
+  if (bulkForm) {
+    bulkForm.addEventListener("submit", function (e) {
+      const checked = Array.from(document.querySelectorAll(".row-check:checked"));
+      if (checked.length === 0) {
+        e.preventDefault();
+        alert("一括適用したい行をチェックしてね！");
+        return;
+      }
+
+      // 例: ["92","87","80"] を "92,87,80" にする
+      const ids = checked.map(cb => cb.value).join(",");
+      document.getElementById("selectedIds").value = ids;
+
+      // 押したボタンがカテゴリかメンバーかで、未選択を弾く
+      const submitter = e.submitter; // 押されたボタン
+      if (submitter && submitter.value === "category") {
+        const cat = document.getElementById("bulkCategory").value;
+        if (!cat) { e.preventDefault(); alert("カテゴリを選んでね！"); }
+      }
+      if (submitter && submitter.value === "member") {
+        const mem = document.getElementById("bulkMember").value;
+        if (!mem) { e.preventDefault(); alert("メンバーを選んでね！"); }
+      }
+    });
+  }
+
 });
 </script>
 

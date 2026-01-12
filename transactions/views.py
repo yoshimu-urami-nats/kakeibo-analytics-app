@@ -47,6 +47,48 @@ def _decode_csv_bytes(b: bytes) -> str:
 
 @require_http_methods(["GET", "POST"])
 def transaction_list(request):
+
+    edit_mode = request.GET.get("edit") == "1"
+
+    latest_source = (
+        Transaction.objects
+        .exclude(source_file="")
+        .order_by("-id")
+        .values_list("source_file", flat=True)
+        .first()
+    )
+
+    # 一括更新（POST）
+    if request.method == "POST" and request.POST.get("bulk_action"):
+        action = request.POST.get("bulk_action")  # "category" or "member"
+        selected_ids = request.POST.get("selected_ids", "")
+        ids = [int(x) for x in selected_ids.split(",") if x.strip().isdigit()]
+
+        if not ids:
+          messages.error(request, "チェックされた行がないよ")
+          return redirect(request.path + ("?edit=1" if edit_mode else ""))
+
+        qs = Transaction.objects.filter(id__in=ids)
+        if latest_source:
+            qs = qs.filter(source_file=latest_source)
+
+        if action == "category":
+            category_id = request.POST.get("category_id")
+            if not category_id:
+                messages.error(request, "カテゴリが未選択だよ")
+            else:
+                n = qs.update(category_id=category_id)
+                messages.success(request, f"カテゴリを {n} 件に適用したよ")
+        elif action == "member":
+            member_id = request.POST.get("member_id")
+            if not member_id:
+                messages.error(request, "メンバーが未選択だよ")
+            else:
+                n = qs.update(member_id=member_id)
+                messages.success(request, f"メンバーを {n} 件に適用したよ")
+
+        return redirect(request.path + ("?edit=1" if edit_mode else ""))
+
     if request.method == "POST":
         form = CSVUploadForm(request.POST, request.FILES)
         if not form.is_valid():
@@ -151,35 +193,10 @@ def transaction_list(request):
         )
         return redirect("transactions:list")
 
-    # # GET
-    # form = CSVUploadForm()
-
-    # latest_source = Transaction.objects.order_by("-id").values_list("source_file", flat=True).first()
-
-    # transactions = (
-    #     Transaction.objects
-    #     .select_related("category", "member")
-    #     .filter(source_file=latest_source) if latest_source else Transaction.objects.none()
-    # )
-
-    # return render(
-    #     request,
-    #     "transactions/transaction_list.html",
-    #     {"transactions": transactions, "upload_form": form},
-    # )
-
     # GET
     form = CSVUploadForm()
 
     edit_mode = request.GET.get("edit") == "1"
-
-    latest_source = (
-        Transaction.objects
-        .exclude(source_file="")
-        .order_by("-id")
-        .values_list("source_file", flat=True)
-        .first()
-    )
 
     qs = (
         Transaction.objects
@@ -197,6 +214,9 @@ def transaction_list(request):
 
     transactions = qs
 
+    categories = Category.objects.all().order_by("id")
+    members = Member.objects.all().order_by("id")
+
     return render(
         request,
         "transactions/transaction_list.html",
@@ -205,5 +225,7 @@ def transaction_list(request):
             "upload_form": form,
             "edit_mode": edit_mode,
             "latest_source": latest_source,
+            "categories": categories,
+            "members": members,
         },
     )
