@@ -114,6 +114,28 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  // ===== 全選択（ヘッダ） =====
+  const checkAll = document.getElementById("checkAll");
+  const rowChecks = Array.from(document.querySelectorAll(".row-check"));
+
+  if (checkAll) {
+    // ヘッダの□を押したら、全部ON/OFF
+    checkAll.addEventListener("change", function () {
+      rowChecks.forEach(cb => cb.checked = checkAll.checked);
+    });
+
+    // 行の□を1個でも外したらヘッダOFF、全部ONならヘッダON
+    rowChecks.forEach(cb => {
+      cb.addEventListener("change", function () {
+        const allChecked = rowChecks.length > 0 && rowChecks.every(x => x.checked);
+        const anyChecked = rowChecks.some(x => x.checked);
+
+        checkAll.checked = allChecked;
+        checkAll.indeterminate = !allChecked && anyChecked; // 途中状態（Excelっぽい）
+      });
+    });
+  }
+
   const input = document.getElementById("transactionSearchInput");
   const table = document.getElementById("transactionTable");
   if (!input || !table) return;
