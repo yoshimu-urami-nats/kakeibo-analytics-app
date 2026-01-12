@@ -47,6 +47,15 @@
     <a href="{% url 'transactions:list' %}?edit=1">編集モード: OFF（クリックでON）</a>
   {% endif %}
 
+  {% if edit_mode %}
+    <span style="margin-left:12px;"></span>
+    {% if show_all %}
+      <a href="{% url 'transactions:list' %}?edit=1">表示: 全行（クリックで未割当てだけ）</a>
+    {% else %}
+      <a href="{% url 'transactions:list' %}?edit=1&all=1">表示: 未割当てだけ（クリックで全行）</a>
+    {% endif %}
+  {% endif %}
+
   {% if latest_source %}
     <span>対象ファイル: {{ latest_source }}</span>
   {% endif %}
@@ -84,6 +93,11 @@
   <button type="submit" name="bulk_action" value="member">
     メンバー一括適用
   </button>
+
+  <button type="submit" name="bulk_action" value="confirm" id="confirmBtn">
+    確定済みにする
+  </button>
+
 </form>
 {% endif %}
 
@@ -119,7 +133,12 @@
       <tr>
         {% if edit_mode %}
           <td>
-            <input type="checkbox" class="row-check" value="{{ t.id }}">
+            <input type="checkbox"
+                  class="row-check"
+                  value="{{ t.id }}"
+                  data-has-category="{% if t.category_id %}1{% else %}0{% endif %}"
+                  data-has-member="{% if t.member_id %}1{% else %}0{% endif %}">
+
           </td>
         {% endif %}
 
@@ -211,6 +230,18 @@ document.addEventListener("DOMContentLoaded", function () {
       if (submitter && submitter.value === "member") {
         const mem = document.getElementById("bulkMember").value;
         if (!mem) { e.preventDefault(); alert("メンバーを選んでね！"); }
+      }
+
+      // ★ confirm のとき：チェックした行がカテゴリ/メンバー両方埋まってるか確認
+      if (submitter && submitter.value === "confirm") {
+        const invalid = checked.some(cb =>
+          cb.dataset.hasCategory !== "1" || cb.dataset.hasMember !== "1"
+        );
+        if (invalid) {
+          e.preventDefault();
+          alert("カテゴリ/メンバー未割当の行が含まれてるから確定できないよ");
+          return;
+        }
       }
     });
   }

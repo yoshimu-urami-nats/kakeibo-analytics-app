@@ -49,6 +49,7 @@ def _decode_csv_bytes(b: bytes) -> str:
 def transaction_list(request):
 
     edit_mode = request.GET.get("edit") == "1"
+    show_all = request.GET.get("all") == "1"  # ★追加：最新ファイルを全行表示したい時
 
     latest_source = (
         Transaction.objects
@@ -86,8 +87,22 @@ def transaction_list(request):
             else:
                 n = qs.update(member_id=member_id)
                 messages.success(request, f"メンバーを {n} 件に適用したよ")
+        elif action == "confirm":
+            qs2 = qs.filter(
+                category__isnull=False,
+                member__isnull=False,
+                is_closed=False,
+            )
+            updated = qs2.update(is_closed=True)
+            messages.success(request, f"確定にしました：{updated}件")
 
-        return redirect(request.path + ("?edit=1" if edit_mode else ""))
+        qs_suffix = ""
+        if edit_mode:
+            qs_suffix = "?edit=1"
+            if show_all:
+                qs_suffix += "&all=1"
+
+        return redirect(request.path + qs_suffix)
 
     if request.method == "POST":
         form = CSVUploadForm(request.POST, request.FILES)
@@ -196,8 +211,6 @@ def transaction_list(request):
     # GET
     form = CSVUploadForm()
 
-    edit_mode = request.GET.get("edit") == "1"
-
     qs = (
         Transaction.objects
         .select_related("category", "member")
@@ -209,7 +222,7 @@ def transaction_list(request):
         qs = Transaction.objects.none()
 
     # 編集モードONなら、未割当てだけ（カテゴリ or メンバーがNULL）
-    if edit_mode:
+    if edit_mode and not show_all:
         qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
 
     transactions = qs
@@ -224,6 +237,7 @@ def transaction_list(request):
             "transactions": transactions,
             "upload_form": form,
             "edit_mode": edit_mode,
+            "show_all": show_all,
             "latest_source": latest_source,
             "categories": categories,
             "members": members,
