@@ -31,6 +31,67 @@
 
 <hr>
 
+{% if summary %}
+  <hr>
+  <h3>最新データ（確定済みのみ）サマリ</h3>
+
+  <table border="1" cellpadding="6" style="border-collapse: collapse; margin-top: 8px;">
+    <thead>
+      <tr>
+        <th></th>
+        <th>合計</th>
+        <th>一人当たり</th>
+        <th>住信SBI振込</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>な</td>
+        <td>¥{{ summary.n_total }}</td>
+        <td>¥0</td>
+        <td>¥{{ summary.transfer_n }}</td>
+      </tr>
+      <tr>
+        <td>ゆ</td>
+        <td>¥{{ summary.y_total }}</td>
+        <td>¥0</td>
+        <td>¥{{ summary.transfer_y }}</td>
+      </tr>
+      <tr>
+        <td>共有</td>
+        <td>¥{{ summary.shared_total }}</td>
+        <td>¥{{ summary.shared_per_person }}</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>家賃</td>
+        <td>¥{{ summary.rent }}</td>
+        <td>¥{{ summary.rent_per_person }}</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>家賃更新料</td>
+        <td>¥{{ summary.rent_renewal }}</td>
+        <td>¥{{ summary.rent_renewal_per_person }}</td>
+        <td>-</td>
+      </tr>
+      <tr>
+        <td>WRX</td>
+        <td>¥{{ summary.wrx }}</td>
+        <td>¥{{ summary.wrx_per_person }}</td>
+        <td>-</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size: 12px; opacity: 0.8; margin-top: 6px;">
+    ※家賃更新料：2026年6月まで適用。7月からは無し予定。更新料引き落とし月確定＆次回更新月確定後にルール追加予定。
+  </p>
+{% endif %}
+
+
+<hr>
+
 <div class="transaction-search">
   <label for="transactionSearchInput">明細を検索：</label>
   <input

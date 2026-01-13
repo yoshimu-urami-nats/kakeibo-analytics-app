@@ -10,7 +10,7 @@ from django.views.decorators.http import require_http_methods
 from .forms import CSVUploadForm
 from .models import Transaction,Category,Member
 from .rules import guess_category, guess_member, is_derm_clinic
-from django.db.models import Q
+from django.db.models import Q,Sum
 
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
@@ -230,6 +230,65 @@ def transaction_list(request):
     categories = Category.objects.all().order_by("id")
     members = Member.objects.all().order_by("id")
 
+    # ===== 簡易サマリ（最新ファイル×確定済みだけ）=====
+    summary = {
+        "n_total": 0,
+        "y_total": 0,
+        "shared_total": 0,
+        "rent": 167000,
+        "rent_renewal": 27833,  # ※2026年6月まで
+        "wrx": 20000,
+        "shared_per_person": 0,
+        "rent_per_person": 167000 // 2,
+        "rent_renewal_per_person": 27833 // 2,
+        "wrx_per_person": 20000 // 2,
+        "per_person_total": 0,
+        "transfer_n": 0,
+        "transfer_y": 0,
+    }
+
+    if latest_source:
+        base_qs = Transaction.objects.filter(
+            source_file=latest_source,
+            is_closed=True,
+        )
+
+        # member別の合計（memberがNULLのものは除外）
+        totals = (
+            base_qs.exclude(member__isnull=True)
+            .values("member__name")
+            .annotate(total=Sum("amount"))
+        )
+
+        by_name = {row["member__name"]: int(row["total"] or 0) for row in totals}
+
+        summary["n_total"] = by_name.get("な", 0)
+        summary["y_total"] = by_name.get("ゆ", 0)
+        summary["shared_total"] = by_name.get("共有", 0)
+
+        # 家賃更新料：2026年6月まで
+        rent_renewal = 27833 if date.today() <= date(2026, 6, 30) else 0
+        summary["rent_renewal"] = rent_renewal
+        summary["rent_renewal_per_person"] = round(rent_renewal / 2)
+
+        # 一人当たり
+        summary["shared_per_person"] = round(summary["shared_total"] / 2)
+        summary["rent_per_person"] = round(summary["rent"] / 2)
+        summary["rent_renewal_per_person"] = round(summary["rent_renewal"] / 2)
+        summary["wrx_per_person"] = round(summary["wrx"] / 2)
+
+        summary["per_person_total"] = (
+            summary["shared_per_person"]
+            + summary["rent_per_person"]
+            + summary["rent_renewal_per_person"]
+            + summary["wrx_per_person"]
+        )
+
+        # 振込額
+        summary["transfer_n"] = summary["n_total"] + summary["per_person_total"]
+        summary["transfer_y"] = summary["y_total"] + summary["per_person_total"]
+
+
     return render(
         request,
         "transactions/transaction_list.html",
@@ -241,5 +300,6 @@ def transaction_list(request):
             "latest_source": latest_source,
             "categories": categories,
             "members": members,
+            "summary": summary,
         },
     )
