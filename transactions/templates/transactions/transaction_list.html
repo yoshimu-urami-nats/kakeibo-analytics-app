@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% load humanize %}
+
 <p>
     <a href="{% url 'home' %}">← トップに戻る</a>
 </p>
@@ -29,7 +31,6 @@
   <p>未割当てはありません（最新ファイル分）</p>
 {% endif %}
 
-<hr>
 
 {% if summary %}
   <hr>
@@ -47,38 +48,38 @@
     <tbody>
       <tr>
         <td>な</td>
-        <td>¥{{ summary.n_total }}</td>
+        <td>¥{{ summary.n_total|intcomma }}</td>
         <td>¥0</td>
-        <td>¥{{ summary.transfer_n }}</td>
+        <td>¥{{ summary.transfer_n|intcomma }}</td>
       </tr>
       <tr>
         <td>ゆ</td>
-        <td>¥{{ summary.y_total }}</td>
+        <td>¥{{ summary.y_total|intcomma }}</td>
         <td>¥0</td>
-        <td>¥{{ summary.transfer_y }}</td>
+        <td>¥{{ summary.transfer_y|intcomma }}</td>
       </tr>
       <tr>
         <td>共有</td>
-        <td>¥{{ summary.shared_total }}</td>
-        <td>¥{{ summary.shared_per_person }}</td>
+        <td>¥{{ summary.shared_total|intcomma }}</td>
+        <td>¥{{ summary.shared_per_person|intcomma }}</td>
         <td>-</td>
       </tr>
       <tr>
         <td>家賃</td>
-        <td>¥{{ summary.rent }}</td>
-        <td>¥{{ summary.rent_per_person }}</td>
+        <td>¥{{ summary.rent|intcomma }}</td>
+        <td>¥{{ summary.rent_per_person|intcomma }}</td>
         <td>-</td>
       </tr>
       <tr>
         <td>家賃更新料</td>
-        <td>¥{{ summary.rent_renewal }}</td>
-        <td>¥{{ summary.rent_renewal_per_person }}</td>
+        <td>¥{{ summary.rent_renewal|intcomma }}</td>
+        <td>¥{{ summary.rent_renewal_per_person|intcomma }}</td>
         <td>-</td>
       </tr>
       <tr>
         <td>WRX</td>
-        <td>¥{{ summary.wrx }}</td>
-        <td>¥{{ summary.wrx_per_person }}</td>
+        <td>¥{{ summary.wrx|intcomma }}</td>
+        <td>¥{{ summary.wrx_per_person|intcomma }}</td>
         <td>-</td>
       </tr>
     </tbody>
