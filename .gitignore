@@ -212,6 +212,7 @@ __pycache__/
 data_raw/
 *.csv
 *.txt
+*.xlsx
 
 # でもデモ用だけは Git に乗せる
 !demo_transactions.csv
