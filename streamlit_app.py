@@ -98,25 +98,49 @@ if df.empty:
     st.warning("まだ明細データが入ってないみたい。")
     st.stop()
 
+# === ここから追加（cycle_monthの代わり） ===
+
+# source_file から 202601 みたいな "YYYYMM" を抜き出して月キーにする
+# 例: "202601.csv" -> "2026-01"
+df["source_file_month"] = (
+    df["source_file"].astype(str)
+    .str.extract(r"(\d{6})")[0]  # YYYYMM
+    .fillna("unknown")
+)
+
+df["source_file_month"] = df["source_file_month"].apply(
+    lambda s: f"{s[:4]}-{s[4:]}" if s != "unknown" else "unknown"
+)
+
+# プルダウン用（unknownは最後に回す）
+months = sorted([m for m in df["source_file_month"].unique() if m != "unknown"])
+if "unknown" in set(df["source_file_month"].unique()):
+    months.append("unknown")
+
+# === ここまで追加 ===
+
 with st.expander("生の明細データ（先頭5件だけ）"):
     st.dataframe(df.head())
 
 # 月列
-df["month"] = df["date"].dt.to_period("M").astype(str)
+# 締め月（16日〜翌15日）として集計したいので、日付を15日ぶん戻して月を作る
+# 例: 2025-02-01 は ( -15日 ) => 2025-01 扱い（= 1/16〜2/15の締め月）
+df["cycle_month"] = (df["date"] - pd.Timedelta(days=15)).dt.to_period("M").astype(str)
+
 
 # 月別合計（全員）
-month_total = df.groupby("month")["amount"].sum().reset_index()
+month_total = df.groupby("source_file_month")["amount"].sum().reset_index()
 month_total.rename(columns={"amount": "total_amount"}, inplace=True)
 
-st.markdown("### 月別支出合計（全員ぶん）")
+st.markdown("### 月別支出合計（ファイル名ベース）")
 st.altair_chart(
     alt.Chart(month_total)
     .mark_line(point=True)
     .encode(
-        x=alt.X("month:N", title="月"),
+        x=alt.X("source_file_month:N", title="月（ファイル名）", sort=months),
         y=alt.Y("total_amount:Q", title="合計支出（円）"),
         tooltip=[
-            alt.Tooltip("month:N", title="月"),
+            alt.Tooltip("source_file_month:N", title="月"),
             alt.Tooltip("total_amount:Q", title="合計支出", format=","),
         ],
     )
@@ -128,19 +152,19 @@ st.altair_chart(
 df_for_member = df.copy()
 
 member_month_total = (
-    df_for_member.groupby(["month", "member_name"])["amount"].sum().reset_index()
+    df.groupby(["source_file_month", "member_name"])["amount"].sum().reset_index()
 )
 
-st.subheader("月別支出推移（メンバー別）")
+st.subheader("月別支出推移（メンバー別 / ファイル名ベース）")
 st.altair_chart(
     alt.Chart(member_month_total)
     .mark_line(point=True)
     .encode(
-        x=alt.X("month:N", title="月"),
+        x=alt.X("source_file_month:N", title="月（ファイル名）", sort=months),
         y=alt.Y("amount:Q", title="支出（円）"),
         color=alt.Color("member_name:N", title="メンバー"),
         tooltip=[
-            alt.Tooltip("month:N", title="月"),
+            alt.Tooltip("source_file_month:N", title="月"),
             alt.Tooltip("member_name:N", title="メンバー"),
             alt.Tooltip("amount:Q", title="支出", format=","),
         ],
@@ -149,15 +173,16 @@ st.altair_chart(
     use_container_width=True,
 )
 
+
 # 月選択
-months = sorted(df["month"].unique())
 default_index = len(months) - 1 if months else 0
 
 colA, colB, colC = st.columns([1, 2, 1])
 with colB:
-    selected_month = st.selectbox("月を選択（明細をチェックする用）", months, index=default_index)
+    selected_month = st.selectbox("月を選択（ファイル名）", months, index=default_index)
 
-filtered = df[df["month"] == selected_month].copy()
+filtered = df[df["source_file_month"] == selected_month].copy()
+
 
 left_col, right_col = st.columns([2, 1])
 
