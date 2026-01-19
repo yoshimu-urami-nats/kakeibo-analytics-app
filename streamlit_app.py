@@ -14,14 +14,6 @@ import psycopg
 from urllib.parse import urlparse
 
 
-MEMBER_NAME = {
-    1: "Aさん",
-    2: "Bさん",
-    3: "共有",
-    4: "なっちゃん",
-    5: "ゆーへー",
-}
-
 BASE_DIR = Path(__file__).parent
 DATABASE_URL = os.getenv("DATABASE_URL")  # 必須
 
@@ -57,12 +49,18 @@ def load_transactions():
         t.id,
         t.date,
         t.amount,
-        t.memo AS merchant,
-        t.member_id,
-        COALESCE(c.name, '未分類') AS category_name
+        t.shop AS merchant,
+        m.name AS member_name,
+        COALESCE(c.name, '未分類') AS category_name,
+        t.source_file,
+        t.is_closed
     FROM transactions_transaction t
+    LEFT JOIN members_member m
+        ON t.member_id = m.id
     LEFT JOIN transactions_category c
         ON t.category_id = c.id
+    WHERE t.is_closed = TRUE
+    ;
     """
 
     conn = _connect_postgres(DATABASE_URL)
@@ -128,7 +126,6 @@ st.altair_chart(
 
 # メンバー別 × 月別
 df_for_member = df.copy()
-df_for_member["member_name"] = df_for_member["member_id"].map(MEMBER_NAME)
 
 member_month_total = (
     df_for_member.groupby(["month", "member_name"])["amount"].sum().reset_index()
@@ -161,7 +158,6 @@ with colB:
     selected_month = st.selectbox("月を選択（明細をチェックする用）", months, index=default_index)
 
 filtered = df[df["month"] == selected_month].copy()
-filtered["member_name"] = filtered["member_id"].map(MEMBER_NAME)
 
 left_col, right_col = st.columns([2, 1])
 
