@@ -190,8 +190,37 @@ with left_col:
     total_selected = int(filtered["amount"].sum())
     st.markdown(f"### {selected_month} の合計支出")
     st.metric("合計支出", f"{total_selected:,} 円")
-    st.subheader(f"{selected_month} の明細（先頭20件）")
-    st.dataframe(filtered[["date", "amount", "merchant", "member_name"]].head(20))
+    st.subheader(f"{selected_month} の明細（支出TOP20）")
+
+    top20 = (
+        filtered[filtered["amount"] > 0]          # 支出だけ（必要なら）
+        .sort_values("amount", ascending=False)
+        .head(20)
+        .copy()
+    )
+
+    # 表示用：順位(1..20) を作る。IDや元indexは見せない
+    top20 = top20.reset_index(drop=True)
+    top20.insert(0, "rank", top20.index + 1)
+
+    # 日付は文字にしておくと表示が安定
+    top20["date"] = pd.to_datetime(top20["date"]).dt.strftime("%Y-%m-%d")
+
+    # 金額は表示用に文字列へ（ここがポイント）
+    top20["amount_disp"] = top20["amount"].apply(lambda x: f"¥{int(x):,}")
+
+    st.dataframe(
+        top20[["rank", "date", "amount_disp", "merchant", "member_name"]],
+        hide_index=True,
+        column_config={
+            "rank": st.column_config.NumberColumn("順位"),  # ここはformat無しでOK
+            "date": st.column_config.TextColumn("日付"),
+            "amount_disp": st.column_config.TextColumn("金額"),
+            "merchant": st.column_config.TextColumn("店名・サービス"),
+            "member_name": st.column_config.TextColumn("メンバー"),
+        },
+    )
+
 
 with right_col:
     tab_member, tab_category = st.tabs(["メンバー別", "カテゴリ別"])
