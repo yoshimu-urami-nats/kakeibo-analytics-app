@@ -8,9 +8,9 @@
     <title>{% block title %}家計簿アプリ{% endblock %}</title>
 </head>
 <body>
-    <header>
+    <header class="app-header">
         <h1>家計簿データ　明細登録・編集画面</h1>
-            <nav style="margin-bottom: 8px;">
+            <nav class="app-nav">
                 {% if user.is_authenticated %}
                     <span>{{ user.username }} さんでログイン中</span>
                     |
@@ -27,13 +27,13 @@
         <hr>
     </header>
 
-    <main>
+    <main class="app-main">
         {% block content %}
         <!-- 子テンプレートがここに内容を挿入する -->
         {% endblock %}
     </main>
 
-    <footer>
+    <footer class="app-footer">
         <hr>
         <p style="font-size:12px; color:#666;">© 2026 Yoshimu U. Nats</p>
     </footer>

@@ -1,3 +1,32 @@
+/* ===== Layout (base.html 用) ===== */
+.app-header {
+  padding: 18px 24px 8px;
+}
+
+.app-header h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.app-nav {
+  margin-bottom: 8px;
+  font-size: 14px;
+  opacity: 0.95;
+}
+
+.app-main {
+  padding: 16px 24px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.app-footer {
+  padding: 16px 24px;
+  opacity: 0.7;
+  font-size: 12px;
+}
+
 body {
     background-color: #121212;
     color: #f2f2f2;
