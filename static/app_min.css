@@ -53,3 +53,17 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   padding: 16px;
   margin: 12px 0;
 }
+
+/* Djangoページのぷーちくロゴ */
+.logo{
+  display: flex;
+  justify-content: center;   /* 横中央 */
+  align-items: center;       /* 縦中央 */
+  margin: 12px 0 20px;
+}
+
+.logo-img{
+  width: 96px;               /* ← 好きに調整OK（64〜120くらい） */
+  height: auto;
+  opacity: 0.9;
+}
