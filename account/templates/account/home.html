@@ -1,31 +1,9 @@
 {% extends "account/base.html" %}
-
-{% block title %}トップ{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<section class="page">
-  <div class="page-head">
-    <h2 class="page-title">家計簿ダッシュボード</h2>
-    <p class="page-subtitle">CSV取込・明細確認・月次サマリに進めます。</p>
-  </div>
-
-  <div class="grid">
-    <a class="card card-link" href="{% url 'transactions:list' %}">
-      <div class="card-title">明細一覧</div>
-      <div class="card-desc">CSV取込 / 明細検索 / 編集</div>
-      <div class="card-meta">/transactions/</div>
-    </a>
-
-    <a class="card card-link" href="{% url 'admin:index' %}">
-      <div class="card-title">管理画面</div>
-      <div class="card-desc">カテゴリ / メンバー / 明細の管理</div>
-      <div class="card-meta">/admin/</div>
-    </a>
-  </div>
-
-  <div class="actions">
-    <a class="btn" href="{% url 'transactions:list' %}">明細へ行く</a>
-    <a class="btn btn-ghost" href="{% url 'admin:index' %}">管理画面</a>
-  </div>
-</section>
+<h1>Home</h1>
+<div class="card">
+  枠（サイドバー + 右側）確認用ページ
+</div>
 {% endblock %}

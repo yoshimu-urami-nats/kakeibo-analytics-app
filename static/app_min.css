@@ -1,0 +1,55 @@
+@charset "UTF-8";
+
+* { box-sizing: border-box; }
+body { margin: 0; background:#121212; color:#eee; font-family: system-ui, "Meiryo", sans-serif; }
+
+.app { display:flex; min-height:100vh; }
+
+/* サイドバーを「必ず」固定で見せる */
+.sidebar{
+  width: 240px;
+  background:#0f0f0f;
+  border-right: 1px solid rgba(255,255,255,.12);
+  padding: 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo{ font-weight:700; margin-bottom: 12px; }
+
+.nav{ display:grid; gap:8px; margin: 10px 0 16px; }
+.nav a{
+  color:#eee; text-decoration:none;
+  padding:10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+}
+.nav a:hover{ background: rgba(255,255,255,.10); }
+
+.foot{
+  margin-top:auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.12);
+  display: grid;
+  gap: 8px;
+}
+.btn{
+  display:inline-block;
+  color:#80bfff;
+  text-decoration:none;
+  padding:8px 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+}
+
+.main{ flex:1; padding: 24px; }
+.panel{ max-width: 1200px; }
+h1{ margin: 0 0 12px; font-size: 26px; }
+.card{
+  background: #1b1b1b;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 12px 0;
+}

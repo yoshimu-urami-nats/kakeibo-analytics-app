@@ -1,41 +1,42 @@
-<!DOCTYPE html>
+{% load static %}
+<!doctype html>
 <html lang="ja">
 <head>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'transactions/dark.css' %}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Kakeibo{% endblock %}</title>
 
-    <meta charset="UTF-8">
-    <title>{% block title %}家計簿アプリ{% endblock %}</title>
+  <!-- まずはこれ1枚だけ -->
+  <link rel="stylesheet" href="{% static 'app_min.css' %}">
 </head>
 <body>
-    <header class="app-header">
-        <h1>家計簿データ　明細登録・編集画面</h1>
-            <nav class="app-nav">
-                {% if user.is_authenticated %}
-                    <span>{{ user.username }} さんでログイン中</span>
-                    |
-                    <form method="post" action="{% url 'logout' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" style="border:none;background:none;color:blue;text-decoration:underline;cursor:pointer;padding:0;">
-                            ログアウト
-                        </button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'login' %}">ログイン</a>
-                {% endif %}
-            </nav>
-        <hr>
-    </header>
 
-    <main class="app-main">
-        {% block content %}
-        <!-- 子テンプレートがここに内容を挿入する -->
-        {% endblock %}
-    </main>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">BASE!!!</div>
 
-    <footer class="app-footer">
-        <hr>
-        <p style="font-size:12px; color:#666;">© 2026 Yoshimu U. Nats</p>
-    </footer>
+    <nav class="nav">
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'transactions:list' %}">Transactions</a>
+      <a href="/admin/">Admin</a>
+    </nav>
+
+    <div class="foot">
+      {% if user.is_authenticated %}
+        <div class="user">{{ user.username }}</div>
+        <a class="btn" href="{% url 'logout' %}">Logout</a>
+      {% else %}
+        <a class="btn" href="{% url 'login' %}">Login</a>
+      {% endif %}
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="panel">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
 </body>
 </html>

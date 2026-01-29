@@ -1,0 +1,222 @@
+/* =========================
+   PuriPuri Kakeibo - Dark UI
+   ========================= */
+
+/* ---- tokens ---- */
+:root{
+  --bg: #0b0c0f;
+  --panel: #12141a;
+  --panel-2: #161a22;
+  --border: rgba(255,255,255,.10);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.66);
+  --muted-2: rgba(255,255,255,.45);
+  --link: #8bb6ff;
+  --accent: #8b5cf6;
+
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(0,0,0,.45);
+}
+
+/* ---- base ---- */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: radial-gradient(900px 500px at 30% 0%, rgba(139,92,246,.12), transparent 60%),
+              radial-gradient(700px 500px at 90% 10%, rgba(34,197,94,.10), transparent 55%),
+              var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+  line-height: 1.5;
+}
+
+a{ color: var(--link); text-decoration: none; }
+a:hover{ text-decoration: underline; }
+
+/* ---- layout ---- */
+.app-shell{
+  display:flex;
+  min-height:100vh;
+}
+
+.sidebar{
+  width: 240px;
+  padding: 18px 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border-right: 1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 10px 16px;
+}
+.brand-icon{
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+}
+.brand-name{ font-weight: 800; letter-spacing:.2px; }
+
+.side-nav{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding: 6px;
+}
+
+.side-link{
+  display:block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  background: transparent;
+}
+.side-link:hover{
+  background: rgba(255,255,255,.06);
+  text-decoration:none;
+}
+.side-link.active{
+  background: rgba(139,92,246,.18);
+  border: 1px solid rgba(139,92,246,.35);
+}
+
+.sidebar-footer{
+  margin-top: auto;
+  padding: 14px 6px 4px;
+}
+
+.userbox{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+}
+.usericon{
+  width: 36px; height: 36px;
+  display:grid; place-items:center;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+}
+.username{
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.main{ flex:1; padding: 22px 24px; }
+.content{ max-width: 1200px; margin: 0 auto; }
+.footer{
+  max-width:1200px;
+  margin: 24px auto 0;
+  color: var(--muted-2);
+  font-size: 12px;
+  padding: 10px 2px;
+}
+
+/* ---- page ---- */
+.page-title{
+  margin: 6px 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing:.2px;
+}
+.page-subtitle{
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---- cards ---- */
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin: 14px 0;
+}
+.card-title{
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.spacer{ flex:1; }
+
+.btn{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 700;
+}
+.btn:hover{ background: rgba(255,255,255,.10); }
+.btn-small{ padding: 8px 10px; font-size: 12px; border-radius: 10px; }
+
+.btn-primary{
+  background: rgba(139,92,246,.22);
+  border-color: rgba(139,92,246,.40);
+}
+.btn-primary:hover{ background: rgba(139,92,246,.28); }
+
+.btn-ghost{ background: rgba(255,255,255,.04); }
+
+.input, select, textarea{
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline: none;
+}
+.input::placeholder{ color: var(--muted-2); }
+.input:focus, select:focus, textarea:focus{
+  border-color: rgba(139,92,246,.55);
+  box-shadow: 0 0 0 4px rgba(139,92,246,.12);
+}
+
+/* ---- tables ---- */
+.table-wrap{
+  overflow:auto;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,.18);
+}
+table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th, td{
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+th{
+  position: sticky;
+  top: 0;
+  background: rgba(18,20,26,.95);
+  color: var(--muted);
+  font-weight: 800;
+  z-index: 1;
+}
+tbody tr:hover{ background: rgba(255,255,255,.04); }
+
+.muted{ color: var(--muted); }
+.small{ font-size: 12px; color: var(--muted); }

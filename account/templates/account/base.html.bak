@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}家計簿アプリ{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'transactions/dark.css' %}">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 左サイドバー -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">★</div>
+        <div class="brand-name">PuriPuri Kakeibo</div>
+      </div>
+
+      <nav class="side-nav">
+        <a class="side-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+           href="{% url 'home' %}">Home</a>
+
+        <a class="side-link {% if request.resolver_match.app_name == 'transactions' %}active{% endif %}"
+           href="{% url 'transactions:list' %}">CSV Import</a>
+
+        {# 将来: Table / Summary / Analytics をここに増やす #}
+      </nav>
+
+      <div class="sidebar-footer">
+        {% if user.is_authenticated %}
+          <div class="userbox">
+            <div class="usericon">🐹</div>
+            <div class="userinfo">
+              <div class="username">{{ user.username }}</div>
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-small">Logout</button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <a class="btn btn-primary btn-small" href="{% url 'login' %}">Login</a>
+        {% endif %}
+      </div>
+    </aside>
+
+    <!-- 右メイン -->
+    <main class="main">
+      <div class="content">
+        {% block content %}{% endblock %}
+      </div>
+
+      <footer class="footer">
+        <span>© 2026 Yoshimu U. Nats</span>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends "account/base.html" %}
+
+{% block title %}トップ{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">家計簿ダッシュボード</h1>
+  <p class="page-subtitle">CSV取込・明細確認・月次サマリに進めます。</p>
+
+  <div class="card">
+    <div class="card-title">ショートカット</div>
+    <div class="row">
+      <a class="btn btn-primary" href="{% url 'transactions:list' %}">CSV取込 / 明細登録・編集</a>
+      <a class="btn" href="/admin/">管理画面</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">管理項目</div>
+    <p class="muted small">カテゴリ / メンバー / 明細 の編集は admin 側でOK（後でUI作る）</p>
+  </div>
+{% endblock %}
