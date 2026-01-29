@@ -63,7 +63,13 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 }
 
 .logo-img{
-  width: 96px;               /* ← 好きに調整OK（64〜120くらい） */
+  width: 128px;
   height: auto;
-  opacity: 0.9;
+  opacity: 0.95;
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.logo a:hover .logo-img{
+  transform: scale(1.05);
+  opacity: 1;
 }
