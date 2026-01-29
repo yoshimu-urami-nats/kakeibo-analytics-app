@@ -18,14 +18,22 @@ body { margin: 0; background:#121212; color:#eee; font-family: system-ui, "Meiry
 
 .logo{ font-weight:700; margin-bottom: 12px; }
 
+/* 左メニューボタン */
 .nav{ display:grid; gap:8px; margin: 10px 0 16px; }
 .nav a{
-  color:#eee; text-decoration:none;
+  color:#eee;
+  text-decoration:none;
   padding:10px 12px;
   border-radius: 10px;
-  background: rgba(255,255,255,.06);
+  background: transparent;                 /* ← 消す */
+  border: 1px solid rgba(255,255,255,.10); /* ← 枠だけ残す */
+  transition: color .15s ease, background-color .15s ease; /* ちょいﾇﾙ */
 }
-.nav a:hover{ background: rgba(255,255,255,.10); }
+/* 左メニューボタン ホバー時 */
+.nav a:hover{
+  background: rgba(255,255,255,.10);
+  color: rgb(165,190,135); /* ぷーちくより一段濃い */
+}
 
 .foot{
   margin-top:auto;
@@ -62,6 +70,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   margin: 12px 0 20px;
 }
 
+/* Djangoページのぷーちくロゴサイズ */
 .logo-img{
   width: 128px;
   height: auto;
@@ -69,6 +78,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   transition: transform .15s ease, opacity .15s ease;
 }
 
+/* Djangoページのぷーちくロゴホバー時ちょいでか */
 .logo a:hover .logo-img{
   transform: scale(1.05);
   opacity: 1;
