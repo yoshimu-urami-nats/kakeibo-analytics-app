@@ -16,7 +16,7 @@
 
         <!-- ぷーちくロゴ -->
         <div class="logo">
-            <a href="{% url 'home' %}">
+            <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                 <img src="{% static 'images/kakeibo_app_logo_mini.png' %}"
                     alt="BASE"
                     class="logo-img">
@@ -24,9 +24,30 @@
         </div>
 
         <nav class="nav">
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'transactions:list' %}">Transactions</a>
-        <a href="/admin/">Admin</a>
+          <a href="{% url 'home' %}"
+            class="{% if request.resolver_match.view_name == 'home' %}active{% endif %}">
+            CSV Import
+          </a>
+
+          <a href="{% url 'transactions:list' %}"
+            class="{% if request.resolver_match.view_name == 'transactions:list' %}active{% endif %}">
+            Table
+          </a>
+
+          <a href="{% url 'transactions:summary' %}"
+            class="{% if request.resolver_match.view_name == 'transactions:summary' %}active{% endif %}">
+            Summary
+          </a>
+
+          <a href="{% url 'analytics' %}"
+            class="{% if request.resolver_match.view_name == 'analytics' %}active{% endif %}">
+            Analytics
+          </a>
+
+          <a href="/admin/"
+            class="{% if request.path|slice:":7" == '/admin/' %}active{% endif %}">
+            Admin
+          </a>
         </nav>
 
         <div class="foot">

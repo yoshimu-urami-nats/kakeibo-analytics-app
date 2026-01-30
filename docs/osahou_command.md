@@ -241,3 +241,8 @@ st.dataframe(df)
 
 ---
 
+## ● メモジェネレータ
+
+```python
+python tools/memo_gen.py
+```

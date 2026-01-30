@@ -18,6 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from account import views
 from django.contrib.auth import views as auth_views
+from django.conf import settings
+from django.shortcuts import redirect
+
+def analytics_redirect(request):
+    return redirect(settings.STREAMLIT_URL)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,4 +39,7 @@ urlpatterns = [
 
     # トップページ
     path('', views.home, name='home'),
+
+    path("analytics/", analytics_redirect, name="analytics"),
 ]
+

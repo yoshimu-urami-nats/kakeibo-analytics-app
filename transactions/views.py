@@ -12,6 +12,8 @@ from .models import Transaction,Category,Member
 from .rules import guess_category, guess_member, is_derm_clinic
 from django.db.models import Q,Sum
 
+from django.contrib.auth.decorators import login_required
+
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
     # 例: 2025-11-30 / 2025/11/30 どっちでもOKにする
@@ -303,3 +305,7 @@ def transaction_list(request):
             "summary": summary,
         },
     )
+
+@login_required
+def summary(request):
+    return render(request, "transactions/summary.html")

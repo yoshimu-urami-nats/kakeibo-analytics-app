@@ -149,3 +149,5 @@ if "kakeibo-django.onrender.com" not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append("kakeibo-django.onrender.com")
 if "https://kakeibo-django.onrender.com" not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append("https://kakeibo-django.onrender.com")
+
+STREAMLIT_URL = os.getenv("STREAMLIT_URL", "http://localhost:8501")
