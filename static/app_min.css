@@ -35,9 +35,11 @@ body { margin: 0; background:#121212; color:#eee; font-family: system-ui, "Meiry
   color: rgb(165,190,135); /* ぷーちくより一段濃い */
 }
 
+/* 左メニューボタン アクティブ時 */
 .nav a.active{
   background-color: rgba(255,255,255,.12);
   border-color: rgba(255,255,255,.18);
+  color: rgb(165,190,135); /* ← これを追加 */
 }
 
 .foot{
