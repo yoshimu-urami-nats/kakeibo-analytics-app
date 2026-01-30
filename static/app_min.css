@@ -42,6 +42,33 @@ body { margin: 0; background:#121212; color:#eee; font-family: system-ui, "Meiry
   color: rgb(165,190,135); /* ← これを追加 */
 }
 
+/* 外部リンク矢印 */
+.nav a .external{
+  font-size: 0.85em;
+  margin-left: 6px;
+  opacity: .7;
+  display: inline-block;
+  transform: translate(0, 0);
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+/* 外部リンク矢印 ホバー時 */
+.nav a:hover .external{
+  transform: translate(2px, -2px);
+  opacity: 1;
+}
+
+/* 外部リンク矢印 アクティブ時 */
+.nav a.active .external{
+  opacity: 1;
+}
+
+/* 外部リンク Admin */
+.nav a.admin {
+  opacity: .8;
+  font-size: 0.95em;
+}
+
 .foot{
   margin-top:auto;
   padding-top: 12px;

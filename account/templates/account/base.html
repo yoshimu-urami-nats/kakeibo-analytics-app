@@ -41,11 +41,11 @@
 
           <a href="{% url 'analytics' %}"
             class="{% if request.resolver_match.view_name == 'analytics' %}active{% endif %}">
-            Analytics
+            Analytics <span class="external">↗</span>
           </a>
 
           <a href="/admin/"
-            class="{% if request.path|slice:":7" == '/admin/' %}active{% endif %}">
+            class="admin {% if request.path|slice:':7' == '/admin/' %}active{% endif %}">
             Admin
           </a>
         </nav>
