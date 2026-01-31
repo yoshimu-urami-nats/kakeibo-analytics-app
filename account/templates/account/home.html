@@ -1,9 +1,47 @@
 {% extends "account/base.html" %}
+{% load static %}
 {% block title %}CSV Import{% endblock %}
 
 {% block content %}
 <h1>CSV Import</h1>
-<div class="card">
-  ここにCSVアップロードUIを置く（フォーム/ドラッグ&ドロップ等）
+
+<div class="card upload-card">
+  <form class="upload" method="post" action="{% url 'transactions:list' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="upload-row">
+      <!-- 実ファイルinputは隠して、ボタンで開く -->
+      <input id="csvInput" class="upload-input" type="file" name="csv_file" accept=".csv">
+      <button type="button" class="btn btn-file" id="pickBtn">CSVを選択</button>
+
+      <div class="upload-filename" id="fileName">未選択</div>
+    </div>
+
+    <div class="upload-actions">
+      <button type="submit" class="btn btn-primary">インポート</button>
+    </div>
+
+    {% if messages %}
+      <div class="upload-messages">
+        {% for message in messages %}
+          <div class="notice {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </form>
 </div>
+
+<script>
+  (function(){
+    const input = document.getElementById("csvInput");
+    const pickBtn = document.getElementById("pickBtn");
+    const fileName = document.getElementById("fileName");
+
+    pickBtn.addEventListener("click", () => input.click());
+
+    input.addEventListener("change", () => {
+      fileName.textContent = input.files && input.files[0] ? input.files[0].name : "未選択";
+    });
+  })();
+</script>
 {% endblock %}

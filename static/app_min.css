@@ -165,3 +165,102 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .foot .btn:hover{
   background: rgba(165,190,135,.15);
 }
+
+/* ===== CSV Import ===== */
+.upload-card{
+  min-height: 420px;                 /* 余白を作って“中央感” */
+  display: grid;
+  place-items: center;               /* 中央寄せ */
+}
+
+.upload{
+  width: min(720px, 100%);
+  display: grid;
+  gap: 18px;
+}
+
+.upload-row{
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: 14px;
+}
+
+.upload-input{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+
+.btn-file{
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  color: #eee;
+}
+
+.btn-file:hover{
+  background: rgba(255,255,255,.10);
+  color: rgb(165,190,135);
+  border-color: rgba(165,190,135,.45);
+}
+
+.upload-filename{
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-actions{
+  display: grid;
+  place-items: center;
+  margin-top: 8px;
+}
+
+.btn-primary{
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(165,190,135,.55);
+  background: rgba(165,190,135,.12);
+  color: rgb(165,190,135);
+  font-weight: 600;
+  min-width: 140px;
+}
+
+.btn-primary:hover{
+  background: rgba(165,190,135,.18);
+}
+
+.upload-messages{
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.notice{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+}
+
+.notice.success{
+  border-color: rgba(165,190,135,.40);
+}
+
+.notice.error{
+  border-color: rgba(255,120,120,.40);
+}
