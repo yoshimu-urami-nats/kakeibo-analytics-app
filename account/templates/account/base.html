@@ -14,50 +14,65 @@
 <div class="app">
     <aside class="sidebar">
 
-        <!-- ぷーちくロゴ -->
-        <div class="logo">
-            <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                <img src="{% static 'images/kakeibo_app_logo_mini.png' %}"
-                    alt="BASE"
-                    class="logo-img">
-            </a>
-        </div>
+      <!-- ぷーちくロゴ -->
+      <div class="logo">
+        <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+          <img src="{% static 'images/kakeibo_app_logo_mini.png' %}"
+              alt="BASE"
+              class="logo-img">
+        </a>
+      </div>
 
-        <nav class="nav">
-          <a href="{% url 'home' %}"
-            class="{% if request.resolver_match.view_name == 'home' %}active{% endif %}">
-            CSV Import
-          </a>
+      <nav class="nav">
+        <a href="{% url 'home' %}"
+          class="{% if request.resolver_match.view_name == 'home' %}active{% endif %}">
+          CSV Import
+        </a>
 
-          <a href="{% url 'transactions:list' %}"
-            class="{% if request.resolver_match.view_name == 'transactions:list' %}active{% endif %}">
-            Table
-          </a>
+        <a href="{% url 'transactions:list' %}"
+          class="{% if request.resolver_match.view_name == 'transactions:list' %}active{% endif %}">
+          Table
+        </a>
 
-          <a href="{% url 'transactions:summary' %}"
-            class="{% if request.resolver_match.view_name == 'transactions:summary' %}active{% endif %}">
-            Summary
-          </a>
+        <a href="{% url 'transactions:summary' %}"
+          class="{% if request.resolver_match.view_name == 'transactions:summary' %}active{% endif %}">
+          Summary
+        </a>
 
-          <a href="{% url 'analytics' %}"
-            class="{% if request.resolver_match.view_name == 'analytics' %}active{% endif %}">
-            Analytics <span class="external">↗</span>
-          </a>
+        <a href="{% url 'analytics' %}"
+          class="{% if request.resolver_match.view_name == 'analytics' %}active{% endif %}">
+          Analytics <span class="external">↗</span>
+        </a>
 
-          <a href="/admin/"
-            class="admin {% if request.path|slice:':7' == '/admin/' %}active{% endif %}">
-            Admin
-          </a>
-        </nav>
+        <a href="/admin/"
+          class="admin {% if request.path|slice:':7' == '/admin/' %}active{% endif %}">
+          Admin
+        </a>
+      </nav>
 
-        <div class="foot">
+      <!-- フッターユーザーアイコン -->
+      <div class="foot">
         {% if user.is_authenticated %}
-            <div class="user">{{ user.username }}</div>
-            <a class="btn" href="{% url 'logout' %}">Logout</a>
+          <div class="userbox">
+            <div class="usericon">
+              {% if user.username == "yohan" %}
+                <img src="{% static 'images/intiki_nezumi.png' %}" alt="なっちゃん">
+              {% elif user.username == "mengo" %}
+                <img src="{% static 'images/maguro-iwasi.png' %}" alt="メンゴ">
+              {% else %}
+                <img src="{% static 'images/kakeibo_app_logo_mini.png' %}" alt="user">
+              {% endif %}
+            </div>
+
+            <div class="userinfo">
+              <div class="user">{{ user.username }}</div>
+              <a class="btn" href="{% url 'logout' %}">Logout</a>
+            </div>
+          </div>
         {% else %}
-            <a class="btn" href="{% url 'login' %}">Login</a>
+          <a class="btn" href="{% url 'login' %}">Login</a>
         {% endif %}
-        </div>
+      </div>
     </aside>
 
   <main class="main">
