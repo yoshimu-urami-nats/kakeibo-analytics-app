@@ -155,10 +155,10 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 }
 
 .foot .btn{
-  padding: 4px 8px;
-  font-size: 12px;
-  color: rgb(165,190,135);           /* ナビと同じ緑 */
-  border-color: rgba(165,190,135,.5);
+  padding: 2px 6px;        /* ← 少しだけ縮める */
+  font-size: 10px;         /* ← 12 → 11 */
+  color: rgb(165,190,135);
+  border-color: rgba(165,190,135,.45);
   background: transparent;
 }
 
