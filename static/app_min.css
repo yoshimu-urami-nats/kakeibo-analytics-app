@@ -316,7 +316,15 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 }
 
 .table-wrap{ overflow:auto; border-radius: 14px; }
-.table{ width: 100%; border-collapse: collapse; min-width: 720px; }
+
+/* テーブル見た目 */
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+  table-layout: fixed; /* ← これが肝！ カラム幅が安定する */
+}
+
 .table th, .table td{
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255,255,255,.08);
@@ -422,4 +430,65 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .table td.col-amount{
   text-align: right;
   font-variant-numeric: tabular-nums; /* 桁がビシッと揃う（超おすすめ） */
+}
+
+/* =========================
+   Column width tuning
+   ========================= */
+
+/* 編集OFF（チェック列なし）
+   1:ID 2:日付 3:店名 4:金額 5:カテゴリ 6:メンバー 7:確定 */
+.table thead th:nth-child(1),
+.table tbody td:nth-child(1){ width: 64px; }
+
+.table thead th:nth-child(2),
+.table tbody td:nth-child(2){ width: 120px; }
+
+.table thead th:nth-child(4),
+.table tbody td:nth-child(4){ width: 96px; }
+
+.table thead th:nth-child(6),
+.table tbody td:nth-child(6){ width: 84px; }
+
+.table thead th:nth-child(7),
+.table tbody td:nth-child(7){ width: 72px; }
+
+/* カテゴリは少し広め（「食品-日用品」とかを想定） */
+.table thead th:nth-child(5),
+.table tbody td:nth-child(5){ width: 140px; }
+
+/* 店名は余りを使わせる（固定幅は付けない） */
+
+
+/* 編集ON（チェック列あり）
+   1:check 2:ID 3:日付 4:店名 5:金額 6:カテゴリ 7:メンバー 8:確定 */
+.table thead th.col-check,
+.table tbody td.col-check{ width: 44px; } /* 既にあるけど念のため */
+
+.table thead th:nth-child(2),
+.table tbody td:nth-child(2){ width: 64px; }
+
+.table thead th:nth-child(3),
+.table tbody td:nth-child(3){ width: 120px; }
+
+.table thead th:nth-child(5),
+.table tbody td:nth-child(5){ width: 96px; }
+
+.table thead th:nth-child(7),
+.table tbody td:nth-child(7){ width: 84px; }
+
+.table thead th:nth-child(8),
+.table tbody td:nth-child(8){ width: 72px; }
+
+.table thead th:nth-child(6),
+.table tbody td:nth-child(6){ width: 140px; }
+
+/* 店名は余りを使わせる（固定幅なし） */
+
+/* 店名の省略（編集OFFは3列目、編集ONは4列目） */
+.table tbody td:nth-child(3),
+.table tbody td:nth-child(4){
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
