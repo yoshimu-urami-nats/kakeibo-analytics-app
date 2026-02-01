@@ -327,6 +327,12 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   top: 0;
   background: #1b1b1b;
   z-index: 1;
+
+  /* ===== Table header：カラム名を左寄せ ===== */
+  text-align: left;
+  font-weight: 600;
+  font-size: 12.5px;             /* 本文よりわずかに小さく */
+  color: rgba(255,255,255,.85);  /* 白すぎない */
 }
 
 .col-check{ width: 44px; }
