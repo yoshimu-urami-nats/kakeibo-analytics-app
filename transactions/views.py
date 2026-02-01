@@ -254,6 +254,22 @@ def transaction_list(request):
         except Exception:
             pass
 
+        # 月/日だけ指定（例: 1/15, 01/15）
+        m_md = re.match(r"^(\d{1,2})[/-](\d{1,2})$", q)
+        if m_md and latest_source:
+            month = int(m_md.group(1))
+            day = int(m_md.group(2))
+
+            # latest_source = "202602.csv" みたいなのを想定
+            m_year = re.match(r"^(\d{4})", latest_source)
+            if m_year:
+                year = int(m_year.group(1))
+                try:
+                    d = date(year, month, day)
+                    cond |= Q(date=d)
+                except ValueError:
+                    pass
+
         # 年月：2026-01 / 2026/01 でその月のデータ
         m = re.match(r"^(\d{4})[-/](\d{1,2})$", q)
         if m:
