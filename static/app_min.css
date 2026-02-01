@@ -336,6 +336,20 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   background: #1b1b1b;
   z-index: 1;
 
+/* ===== Djangoっぽいストライプ（tbodyだけ） ===== */
+.table tbody tr{
+  background: transparent; /* 念のため初期化 */
+}
+
+.table tbody tr:nth-child(even){
+  background: rgba(255,255,255,.05);
+}
+
+/* HoverもDjangoっぽく「行がふわっと浮く」 */
+.table tbody tr:hover{
+  background: rgba(165,190,135,.08); /* ぷーちく系の薄い緑 */
+}
+
   /* ===== Table header：カラム名を左寄せ ===== */
   text-align: left;
   font-weight: 600;
