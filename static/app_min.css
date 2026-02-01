@@ -377,3 +377,32 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   min-height: 0;
   overflow: auto;  /* これで“枠の中”にスクロールバー */
 }
+
+/* ===== ダークモード用スクロールバー（Table内だけ） ===== */
+
+/* Chrome / Edge / Safari */
+.table-wrap::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background: rgba(255,255,255,.04);
+  border-radius: 999px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background: rgba(220,220,220,.30);
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,.35);
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background: rgba(220,220,220,.45);
+}
+
+/* Firefox */
+.table-wrap{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220,220,220,.38) rgba(255,255,255,.05);
+}
