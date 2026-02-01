@@ -156,6 +156,20 @@
     const input = form?.querySelector('input[name="q"]');
     if(!form || !input) return;
 
+    // ページ表示時：qがあれば検索窓を自動フォーカスして末尾にカーソル
+    // ※ 「検索中に結果が更新されてフォーカスが飛ぶ」を見た目上ほぼ解消できる
+    const params = new URLSearchParams(window.location.search);
+    const hasQ = (params.get("q") || "").trim().length > 0;
+
+    if(hasQ){
+      // 画面描画後にフォーカス（描画タイミング対策）
+      requestAnimationFrame(() => {
+        input.focus({ preventScroll: true });
+        const v = input.value || "";
+        input.setSelectionRange(v.length, v.length);
+      });
+    }
+
     // 既存のクエリを保持したまま q だけ更新する
     function buildUrl(nextQ){
       const url = new URL(window.location.href);
@@ -164,7 +178,6 @@
       }else{
         url.searchParams.delete("q");
       }
-      // ページング等が将来入ったら、ここで page を消すなどもできる
       return url.toString();
     }
 
@@ -174,7 +187,7 @@
       window.clearTimeout(t);
       t = window.setTimeout(() => {
         window.location.href = buildUrl(input.value.trim());
-      }, 350); // ここを 200〜500ms 好みで
+      }, 350);
     });
 
     // Enterで即実行（好み）
@@ -187,5 +200,6 @@
     });
   })();
 </script>
+
 
 {% endblock %}
