@@ -2,105 +2,108 @@
 {% block title %}Table{% endblock %}
 
 {% block content %}
-<h1>Table</h1>
+<div class="table-page">
+  <h1>Table</h1>
 
-<div class="card table-head">
-  <div class="muted">
-    対象ファイル：
-    {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
-    ／ 編集モード：{% if edit_mode %}<b>ON</b>{% else %}OFF{% endif %}
-    {% if edit_mode %} ／ 表示：{% if show_all %}<b>全件</b>{% else %}<b>未割当のみ</b>{% endif %}{% endif %}
+  <div class="card table-head">
+    <div class="muted">
+      対象ファイル：
+      {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
+      ／ 編集モード：{% if edit_mode %}<b>ON</b>{% else %}OFF{% endif %}
+      {% if edit_mode %} ／ 表示：{% if show_all %}<b>全件</b>{% else %}<b>未割当のみ</b>{% endif %}{% endif %}
+    </div>
+
+    <form method="get" class="table-toolbar">
+      <input class="input"
+            type="text"
+            name="q"
+            placeholder="検索（店名 / メモ / 金額 / カテゴリ / メンバー / 日付 など）"
+            value="{{ request.GET.q|default:'' }}">
+
+      <div class="toolbar-actions">
+        {% if edit_mode %}
+          <a class="btn" href="?">編集OFF</a>
+        {% else %}
+          <a class="btn" href="?edit=1">編集ON</a>
+        {% endif %}
+
+        {% if edit_mode %}
+          {% if show_all %}
+            <a class="btn" href="?edit=1">未割当のみ</a>
+          {% else %}
+            <a class="btn" href="?edit=1&all=1">全件表示</a>
+          {% endif %}
+        {% endif %}
+      </div>
+    </form>
   </div>
 
-  <form method="get" class="table-toolbar">
-    <input class="input"
-           type="text"
-           name="q"
-           placeholder="検索（店名 / メモ / 金額 / カテゴリ / メンバー / 日付 など）"
-           value="{{ request.GET.q|default:'' }}">
 
-    <div class="toolbar-actions">
-      {% if edit_mode %}
-        <a class="btn" href="?">編集OFF</a>
-      {% else %}
-        <a class="btn" href="?edit=1">編集ON</a>
-      {% endif %}
+  {% if edit_mode %}
+  <div class="card bulk-card">
+    <h2 class="h2">一括操作</h2>
 
-      {% if edit_mode %}
-        {% if show_all %}
-          <a class="btn" href="?edit=1">未割当のみ</a>
-        {% else %}
-          <a class="btn" href="?edit=1&all=1">全件表示</a>
-        {% endif %}
-      {% endif %}
-    </div>
-  </form>
-</div>
+    <form method="post" id="bulkForm">
+      {% csrf_token %}
+      <input type="hidden" name="selected_ids" id="selectedIds" value="">
+      <div class="bulk-grid">
+        <div class="bulk-item">
+          <div class="muted">カテゴリ一括</div>
+          <div class="bulk-row">
+            <select name="category_id" class="select">
+              <option value="">カテゴリを選択</option>
+              {% for c in categories %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn" type="submit" name="bulk_action" value="category">適用</button>
+          </div>
+        </div>
 
-{% if edit_mode %}
-<div class="card bulk-card">
-  <h2 class="h2">一括操作</h2>
+        <div class="bulk-item">
+          <div class="muted">メンバー一括</div>
+          <div class="bulk-row">
+            <select name="member_id" class="select">
+              <option value="">メンバーを選択</option>
+              {% for m in members %}
+                <option value="{{ m.id }}">{{ m.name }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn" type="submit" name="bulk_action" value="member">適用</button>
+          </div>
+        </div>
 
-  <form method="post" id="bulkForm">
-    {% csrf_token %}
-    <input type="hidden" name="selected_ids" id="selectedIds" value="">
-    <div class="bulk-grid">
-      <div class="bulk-item">
-        <div class="muted">カテゴリ一括</div>
-        <div class="bulk-row">
-          <select name="category_id" class="select">
-            <option value="">カテゴリを選択</option>
-            {% for c in categories %}
-              <option value="{{ c.id }}">{{ c.name }}</option>
-            {% endfor %}
-          </select>
-          <button class="btn" type="submit" name="bulk_action" value="category">適用</button>
+        <div class="bulk-item">
+          <div class="muted">確定（カテゴリ&メンバー埋まってる行だけ）</div>
+          <button class="btn btn-primary" type="submit" name="bulk_action" value="confirm">確定する</button>
         </div>
       </div>
+    </form>
+  </div>
+  {% endif %}
 
-      <div class="bulk-item">
-        <div class="muted">メンバー一括</div>
-        <div class="bulk-row">
-          <select name="member_id" class="select">
-            <option value="">メンバーを選択</option>
-            {% for m in members %}
-              <option value="{{ m.id }}">{{ m.name }}</option>
-            {% endfor %}
-          </select>
-          <button class="btn" type="submit" name="bulk_action" value="member">適用</button>
-        </div>
-      </div>
+  <div class="card table-card">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            {% if edit_mode %}<th class="col-check"><input type="checkbox" id="checkAll"></th>{% endif %}
+            <th>ID</th>
+            <th>日付</th>
+            <th>店名</th>
+            <th>金額</th>
+            <th>カテゴリ</th>
+            <th>メンバー</th>
+            <th>確定</th>
+          </tr>
+        </thead>
 
-      <div class="bulk-item">
-        <div class="muted">確定（カテゴリ&メンバー埋まってる行だけ）</div>
-        <button class="btn btn-primary" type="submit" name="bulk_action" value="confirm">確定する</button>
-      </div>
+        <tbody id="txTbody">
+          {% include "transactions/_transaction_rows.html" %}
+        </tbody>
+
+      </table>
     </div>
-  </form>
-</div>
-{% endif %}
-
-<div class="card table-card">
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          {% if edit_mode %}<th class="col-check"><input type="checkbox" id="checkAll"></th>{% endif %}
-          <th>ID</th>
-          <th>日付</th>
-          <th>店名</th>
-          <th>金額</th>
-          <th>カテゴリ</th>
-          <th>メンバー</th>
-          <th>確定</th>
-        </tr>
-      </thead>
-
-      <tbody id="txTbody">
-        {% include "transactions/_transaction_rows.html" %}
-      </tbody>
-
-    </table>
   </div>
 </div>
 

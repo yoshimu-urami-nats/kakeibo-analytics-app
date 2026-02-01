@@ -350,3 +350,30 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   color: rgba(255,200,120,.95);
 }
 .muted{ color: rgba(255,255,255,.55); font-size: 12px; }
+
+/* ===== Table page: 画面内に収めて、テーブル枠内だけスクロール ===== */
+.table-page{
+  height: calc(100vh - 48px); /* .main の上下padding 24px*2 を引く */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* flexの子がちゃんと縮められるように */
+.table-page > *{
+  min-height: 0;
+}
+
+/* bulk が出ても、残りをテーブルに渡す */
+.table-page .table-card{
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ここがスクロール領域 */
+.table-page .table-wrap{
+  flex: 1;
+  min-height: 0;
+  overflow: auto;  /* これで“枠の中”にスクロールバー */
+}
