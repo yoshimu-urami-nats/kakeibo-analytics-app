@@ -95,24 +95,11 @@
           <th>確定</th>
         </tr>
       </thead>
-      <tbody>
-        {% for t in transactions %}
-        <tr>
-          {% if edit_mode %}
-            <td class="col-check"><input type="checkbox" class="rowCheck" value="{{ t.id }}"></td>
-          {% endif %}
-          <td>{{ t.id }}</td>
-          <td>{{ t.date }}</td>
-          <td>{{ t.shop }}</td>
-          <td>{{ t.amount }}</td>
-          <td>{% if t.category %}{{ t.category.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
-          <td>{% if t.member %}{{ t.member.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
-          <td>{% if t.is_closed %}<span class="pill ok">済</span>{% else %}<span class="pill">未</span>{% endif %}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="8" class="muted">データがありません</td></tr>
-        {% endfor %}
+
+      <tbody id="txTbody">
+        {% include "transactions/_transaction_rows.html" %}
       </tbody>
+
     </table>
   </div>
 </div>
@@ -154,52 +141,56 @@
   (function(){
     const form = document.querySelector("form.table-toolbar");
     const input = form?.querySelector('input[name="q"]');
-    if(!form || !input) return;
+    const tbody = document.getElementById("txTbody");
+    if(!form || !input || !tbody) return;
 
-    // ページ表示時：qがあれば検索窓を自動フォーカスして末尾にカーソル
-    // ※ 「検索中に結果が更新されてフォーカスが飛ぶ」を見た目上ほぼ解消できる
-    const params = new URLSearchParams(window.location.search);
-    const hasQ = (params.get("q") || "").trim().length > 0;
-
-    if(hasQ){
-      // 画面描画後にフォーカス（描画タイミング対策）
-      requestAnimationFrame(() => {
-        input.focus({ preventScroll: true });
-        const v = input.value || "";
-        input.setSelectionRange(v.length, v.length);
-      });
-    }
-
-    // 既存のクエリを保持したまま q だけ更新する
-    function buildUrl(nextQ){
+    function buildRowsUrl(nextQ){
       const url = new URL(window.location.href);
-      if(nextQ){
-        url.searchParams.set("q", nextQ);
-      }else{
-        url.searchParams.delete("q");
-      }
+      url.pathname = url.pathname.replace(/\/?$/, "/") + "rows/"; // /transactions/rows/
+      if(nextQ) url.searchParams.set("q", nextQ);
+      else url.searchParams.delete("q");
       return url.toString();
     }
 
-    // 入力中に連打で遷移しないように debounce
+    function updateAddressBar(nextQ){
+      const url = new URL(window.location.href);
+      if(nextQ) url.searchParams.set("q", nextQ);
+      else url.searchParams.delete("q");
+      history.replaceState(null, "", url.toString());
+    }
+
     let t = null;
+    let lastToken = 0;
+
+    async function fetchRows(q){
+      const token = ++lastToken;
+      const res = await fetch(buildRowsUrl(q), { headers: { "X-Requested-With": "fetch" }});
+      if(!res.ok) return;
+      const html = await res.text();
+      if(token !== lastToken) return; // 古いレスポンスは捨てる
+      tbody.innerHTML = html;
+      updateAddressBar(q);
+      // フォーカス維持（遷移しないので基本要らないけど保険）
+      input.focus({ preventScroll: true });
+      const v = input.value || "";
+      input.setSelectionRange(v.length, v.length);
+    }
+
     input.addEventListener("input", () => {
       window.clearTimeout(t);
       t = window.setTimeout(() => {
-        window.location.href = buildUrl(input.value.trim());
-      }, 350);
+        fetchRows(input.value.trim());
+      }, 250); // ちょい短めでOK
     });
 
-    // Enterで即実行（好み）
     input.addEventListener("keydown", (e) => {
       if(e.key === "Enter"){
         e.preventDefault();
         window.clearTimeout(t);
-        window.location.href = buildUrl(input.value.trim());
+        fetchRows(input.value.trim());
       }
     });
   })();
 </script>
-
 
 {% endblock %}

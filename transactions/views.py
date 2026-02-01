@@ -15,6 +15,9 @@ from django.db.models import Q,Sum
 
 from django.contrib.auth.decorators import login_required
 
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
     # 例: 2025-11-30 / 2025/11/30 どっちでもOKにする
@@ -368,3 +371,86 @@ def transaction_list(request):
 @login_required
 def summary(request):
     return render(request, "transactions/summary.html")
+
+def transaction_rows(request):
+    # ここは transaction_list の GET 部分と同じ条件で qs を作るだけ
+    edit_mode = request.GET.get("edit") == "1"
+    show_all = request.GET.get("all") == "1"
+
+    latest_source = (
+        Transaction.objects
+        .exclude(source_file="")
+        .order_by("-id")
+        .values_list("source_file", flat=True)
+        .first()
+    )
+
+    qs = Transaction.objects.select_related("category", "member")
+    if latest_source:
+        qs = qs.filter(source_file=latest_source)
+    else:
+        qs = Transaction.objects.none()
+
+    if edit_mode and not show_all:
+        qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
+
+    # ★ここは既に作ってある検索ロジックを「そのままコピペ」でOK
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        cond = (
+            Q(shop__icontains=q)
+            | Q(memo__icontains=q)
+            | Q(source_file__icontains=q)
+            | Q(category__name__icontains=q)
+            | Q(member__name__icontains=q)
+        )
+
+        if q.isdigit():
+            cond |= Q(id=int(q))
+
+        amt = q.replace(",", "").replace("円", "")
+        if amt.isdigit():
+            cond |= Q(amount=int(amt))
+
+        try:
+            d = _parse_date(q)
+            cond |= Q(date=d)
+        except Exception:
+            pass
+
+        m_md = re.match(r"^(\d{1,2})[/-](\d{1,2})$", q)
+        if m_md and latest_source:
+            month = int(m_md.group(1))
+            day = int(m_md.group(2))
+            m_year = re.match(r"^(\d{4})", latest_source)
+            if m_year:
+                year = int(m_year.group(1))
+                try:
+                    d = date(year, month, day)
+                    cond |= Q(date=d)
+                except ValueError:
+                    pass
+
+        m = re.match(r"^(\d{4})[-/](\d{1,2})$", q)
+        if m:
+            y = int(m.group(1))
+            mo = int(m.group(2))
+            if 1 <= mo <= 12:
+                cond |= Q(date__year=y, date__month=mo)
+
+        if q in ("済", "確定", "closed"):
+            cond |= Q(is_closed=True)
+        elif q in ("未", "未確定", "open"):
+            cond |= Q(is_closed=False)
+
+        qs = qs.filter(cond)
+
+    html = render_to_string(
+        "transactions/_transaction_rows.html",
+        {
+            "transactions": qs,
+            "edit_mode": edit_mode,
+        },
+        request=request
+    )
+    return HttpResponse(html)
