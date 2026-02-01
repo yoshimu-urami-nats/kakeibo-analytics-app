@@ -12,9 +12,9 @@
     </td>
 
     <td>{{ t.shop }}</td>
-    
+
     {% load humanize %}
-    <td>{{ t.amount|intcomma }}</td>
+    <td class="col-amount">{{ t.amount|intcomma }}</td>
 
     <td>{% if t.category %}{{ t.category.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
     <td>{% if t.member %}{{ t.member.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>

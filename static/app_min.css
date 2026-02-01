@@ -417,3 +417,9 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .date.土, .date.日 {
   color: rgba(255,180,180,.9);
 }
+
+/* ===== 金額カラムは右寄せ ===== */
+.table td.col-amount{
+  text-align: right;
+  font-variant-numeric: tabular-nums; /* 桁がビシッと揃う（超おすすめ） */
+}
