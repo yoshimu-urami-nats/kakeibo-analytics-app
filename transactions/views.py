@@ -227,6 +227,15 @@ def transaction_list(request):
     if edit_mode and not show_all:
         qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
 
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        # shop / memo / amount あたりを検索対象に（必要なら増やす）
+        qs = qs.filter(
+            Q(shop__icontains=q)
+            | Q(memo__icontains=q)
+            | Q(amount__icontains=q)
+        )
+
     transactions = qs
 
     categories = Category.objects.all().order_by("id")
