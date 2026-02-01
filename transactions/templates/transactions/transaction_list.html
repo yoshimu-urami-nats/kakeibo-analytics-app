@@ -84,7 +84,7 @@
 
   <div class="card table-card">
     <div class="table-wrap">
-      <table class="table">
+      <table class="table {% if edit_mode %}is-edit{% else %}is-view{% endif %}">
         <thead>
           <tr>
             {% if edit_mode %}<th class="col-check"><input type="checkbox" id="checkAll"></th>{% endif %}
