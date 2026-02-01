@@ -149,4 +149,43 @@
     });
   })();
 </script>
+
+<script>
+  (function(){
+    const form = document.querySelector("form.table-toolbar");
+    const input = form?.querySelector('input[name="q"]');
+    if(!form || !input) return;
+
+    // 既存のクエリを保持したまま q だけ更新する
+    function buildUrl(nextQ){
+      const url = new URL(window.location.href);
+      if(nextQ){
+        url.searchParams.set("q", nextQ);
+      }else{
+        url.searchParams.delete("q");
+      }
+      // ページング等が将来入ったら、ここで page を消すなどもできる
+      return url.toString();
+    }
+
+    // 入力中に連打で遷移しないように debounce
+    let t = null;
+    input.addEventListener("input", () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        window.location.href = buildUrl(input.value.trim());
+      }, 350); // ここを 200〜500ms 好みで
+    });
+
+    // Enterで即実行（好み）
+    input.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        window.clearTimeout(t);
+        window.location.href = buildUrl(input.value.trim());
+      }
+    });
+  })();
+</script>
+
 {% endblock %}
