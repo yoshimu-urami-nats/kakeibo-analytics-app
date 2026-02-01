@@ -1,6 +1,7 @@
 # transactions/views.py
 import csv
 import io
+import re
 from datetime import datetime, date
 
 from django.contrib import messages
@@ -229,12 +230,45 @@ def transaction_list(request):
 
     q = (request.GET.get("q") or "").strip()
     if q:
-        # shop / memo / amount あたりを検索対象に（必要なら増やす）
-        qs = qs.filter(
+        cond = (
             Q(shop__icontains=q)
             | Q(memo__icontains=q)
-            | Q(amount__icontains=q)
+            | Q(source_file__icontains=q)
+            | Q(category__name__icontains=q)
+            | Q(member__name__icontains=q)
         )
+
+        # IDっぽいなら id= も候補に入れる
+        if q.isdigit():
+            cond |= Q(id=int(q))
+
+        # 金額っぽい（カンマ/円を許容）なら amount= も候補に入れる
+        amt = q.replace(",", "").replace("円", "")
+        if amt.isdigit():
+            cond |= Q(amount=int(amt))
+
+        # 日付：完全一致（2026-01-15 / 2026/01/15）
+        try:
+            d = _parse_date(q)
+            cond |= Q(date=d)
+        except Exception:
+            pass
+
+        # 年月：2026-01 / 2026/01 でその月のデータ
+        m = re.match(r"^(\d{4})[-/](\d{1,2})$", q)
+        if m:
+            y = int(m.group(1))
+            mo = int(m.group(2))
+            if 1 <= mo <= 12:
+                cond |= Q(date__year=y, date__month=mo)
+
+        # 確定（済/未）でも引けるように（お好みで）
+        if q in ("済", "確定", "closed"):
+            cond |= Q(is_closed=True)
+        elif q in ("未", "未確定", "open"):
+            cond |= Q(is_closed=False)
+
+        qs = qs.filter(cond)
 
     transactions = qs
 
