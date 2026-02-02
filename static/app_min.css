@@ -479,7 +479,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 }
 
 /* ---- 編集OFF（check列なし）
-   1:ID 2:日付 3:店名 4:金額 5:カテゴリ 6:メンバー 7:確定 ---- */
+1:ID 2:日付 3:店名 4:メモ 5:金額 6:カテゴリ 7:メンバー 8:確定 ---- */
 .table.is-view thead th:nth-child(1),
 .table.is-view tbody td:nth-child(1){ width: 64px; }
 
@@ -487,19 +487,24 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .table.is-view tbody td:nth-child(2){ width: 120px; }
 
 .table.is-view thead th:nth-child(4),
-.table.is-view tbody td:nth-child(4){ width: 108px; } /* 金額ちょい広めで右寄せが映える */
+.table.is-view tbody td:nth-child(4){
+  width: 220px;   /* メモはちょい広め */
+}
 
 .table.is-view thead th:nth-child(5),
-.table.is-view tbody td:nth-child(5){ width: 150px; } /* カテゴリ少し広め */
+.table.is-view tbody td:nth-child(5){ width: 108px; } /* 金額ちょい広めで右寄せが映える */
 
 .table.is-view thead th:nth-child(6),
-.table.is-view tbody td:nth-child(6){ width: 90px; }
+.table.is-view tbody td:nth-child(6){ width: 150px; } /* カテゴリ少し広め */
 
 .table.is-view thead th:nth-child(7),
-.table.is-view tbody td:nth-child(7){ width: 74px; }
+.table.is-view tbody td:nth-child(7){ width: 90px; }
+
+.table.is-view thead th:nth-child(8),
+.table.is-view tbody td:nth-child(8){ width: 74px; }
 
 /* ---- 編集ON（check列あり）
-   1:check 2:ID 3:日付 4:店名 5:金額 6:カテゴリ 7:メンバー 8:確定 ---- */
+1:check 2:ID 3:日付 4:店名 5:メモ 6:金額 7:カテゴリ 8:メンバー 9:確定 ---- */
 .table.is-edit thead th.col-check,
 .table.is-edit tbody td.col-check{ width: 44px; }
 
@@ -510,13 +515,29 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .table.is-edit tbody td:nth-child(3){ width: 120px; }
 
 .table.is-edit thead th:nth-child(5),
-.table.is-edit tbody td:nth-child(5){ width: 108px; }
+.table.is-edit tbody td:nth-child(5){
+  width: 220px;
+}
 
 .table.is-edit thead th:nth-child(6),
-.table.is-edit tbody td:nth-child(6){ width: 150px; }
+.table.is-edit tbody td:nth-child(6){ width: 108px; }
 
 .table.is-edit thead th:nth-child(7),
-.table.is-edit tbody td:nth-child(7){ width: 90px; }
+.table.is-edit tbody td:nth-child(7){ width: 150px; }
 
 .table.is-edit thead th:nth-child(8),
-.table.is-edit tbody td:nth-child(8){ width: 74px; }
+.table.is-edit tbody td:nth-child(8){ width: 90px; }
+
+.table.is-edit thead th:nth-child(9),
+.table.is-edit tbody td:nth-child(9){ width: 74px; }
+
+/* メモ用 */
+.col-memo{
+  color: rgba(255,255,255,.65);
+}
+
+.table td.col-memo{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

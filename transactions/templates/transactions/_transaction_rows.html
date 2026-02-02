@@ -13,6 +13,10 @@
 
     <td>{{ t.shop }}</td>
 
+    <td class="col-memo muted">
+    {{ t.memo|default:"" }}
+    </td>
+
     {% load humanize %}
     <td class="col-amount">{{ t.amount|intcomma }}</td>
 
