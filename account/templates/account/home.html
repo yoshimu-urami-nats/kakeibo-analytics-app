@@ -1,47 +1,26 @@
 {% extends "account/base.html" %}
-{% load static %}
-{% block title %}CSV Import{% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>CSV Import</h1>
+<h1>Home</h1>
 
-<div class="card upload-card">
-  <form class="upload" method="post" action="{% url 'transactions:list' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <div class="upload-row">
-      <!-- 実ファイルinputは隠して、ボタンで開く -->
-      <input id="csvInput" class="upload-input" type="file" name="csv_file" accept=".csv">
-      <button type="button" class="btn btn-file" id="pickBtn">CSVを選択</button>
-
-      <div class="upload-filename" id="fileName">未選択</div>
-    </div>
-
-    <div class="upload-actions">
-      <button type="submit" class="btn btn-primary">インポート</button>
-    </div>
-
-    {% if messages %}
-      <div class="upload-messages">
-        {% for message in messages %}
-          <div class="notice {{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  </form>
+<div class="card">
+  <h2 class="h2">このアプリの目的</h2>
+  <p class="muted">（あとで文章を詰める）家計簿CSVを取り込み、整形し、分析・予測につなげる。</p>
 </div>
 
-<script>
-  (function(){
-    const input = document.getElementById("csvInput");
-    const pickBtn = document.getElementById("pickBtn");
-    const fileName = document.getElementById("fileName");
+<div class="card">
+  <h2 class="h2">データの前提・制約</h2>
+  <p class="muted">（あとで詰める）入力CSVの形式、欠損、カテゴリ/メンバー割当など。</p>
+</div>
 
-    pickBtn.addEventListener("click", () => input.click());
+<div class="card">
+  <h2 class="h2">できること / できないこと</h2>
+  <p class="muted">（あとで詰める）</p>
+</div>
 
-    input.addEventListener("change", () => {
-      fileName.textContent = input.files && input.files[0] ? input.files[0].name : "未選択";
-    });
-  })();
-</script>
+<div class="card">
+  <h2 class="h2">何を見てほしいか</h2>
+  <p class="muted">（あとで詰める）Tableの編集体験、EDAの健全性確認、Predictionの前提と限界。</p>
+</div>
 {% endblock %}

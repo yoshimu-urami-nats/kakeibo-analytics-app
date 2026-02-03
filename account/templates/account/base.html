@@ -26,6 +26,11 @@
       <nav class="nav">
         <a href="{% url 'home' %}"
           class="{% if request.resolver_match.view_name == 'home' %}active{% endif %}">
+          Home
+        </a>
+
+        <a href="{% url 'csv_import' %}"
+          class="{% if request.resolver_match.view_name == 'csv_import' %}active{% endif %}">
           CSV Import
         </a>
 
@@ -34,14 +39,14 @@
           Table
         </a>
 
-        <a href="{% url 'transactions:summary' %}"
-          class="{% if request.resolver_match.view_name == 'transactions:summary' %}active{% endif %}">
-          Summary
+        <a href="{% url 'eda' %}"
+          class="{% if request.resolver_match.view_name == 'eda' %}active{% endif %}">
+          EDA
         </a>
 
-        <a href="{% url 'analytics' %}"
-          class="{% if request.resolver_match.view_name == 'analytics' %}active{% endif %}">
-          Analytics <span class="external">↗</span>
+        <a href="{% url 'prediction' %}"
+          class="{% if request.resolver_match.view_name == 'prediction' %}active{% endif %}">
+          Prediction
         </a>
 
         <a href="/admin/"
@@ -49,6 +54,7 @@
           Admin
         </a>
       </nav>
+
 
       <!-- フッターユーザーアイコン -->
       <div class="foot">
