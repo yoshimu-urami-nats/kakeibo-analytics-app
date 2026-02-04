@@ -740,3 +740,35 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   border-top: 1px solid rgba(255,255,255,.10);
   margin: 14px 0;
 }
+
+/* ===== Home accordion tuning ===== */
+.home-acc > summary{
+  padding: 4px 0;          /* card の padding があるので summary は薄めでOK */
+}
+
+.home-acc .summary-content{
+  max-width: 900px;        /* Homeは文章なので Summary(680)より広く */
+}
+
+/* 強い1文を“締め”にする枠 */
+.callout{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+}
+
+/* ===== Home accordion: JSなし版（displayで開閉）===== */
+.home-acc > .summary-content{
+  height: auto;     /* ← acc共通の height:0 を無効化 */
+  opacity: 1;       /* ← acc共通の opacity:0 を無効化 */
+  overflow: visible;
+  transition: none; /* ← Homeはアニメ無しでOK */
+  display: none;    /* ← 閉じたら隠す */
+}
+
+.home-acc[open] > .summary-content{
+  display: block;   /* ← 開いたら表示 */
+}
