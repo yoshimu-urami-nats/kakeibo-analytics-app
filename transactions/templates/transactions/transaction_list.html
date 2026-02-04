@@ -13,7 +13,7 @@
       <span class="muted">（クリックで開閉）</span>
     </summary>
 
-    <div class="card summary-card">
+    <div class="card summary-card summary-compact">
       <div class="summary-head">
         <h2 class="h2">Summary</h2>
         <div class="muted">
@@ -38,14 +38,14 @@
           <tr>
             <th class="rowhead">な</th>
             <td class="num">¥{{ summary.n_total|intcomma }}</td>
-            <td class="num muted">¥0</td>
+            <td class="num muted">—</td>
             <td class="num">¥{{ summary.transfer_n|intcomma }}</td>
           </tr>
 
           <tr>
             <th class="rowhead">ゆ</th>
             <td class="num">¥{{ summary.y_total|intcomma }}</td>
-            <td class="num muted">¥0</td>
+            <td class="num muted">—</td>
             <td class="num">¥{{ summary.transfer_y|intcomma }}</td>
           </tr>
 
@@ -54,10 +54,6 @@
             <td class="num">¥{{ summary.shared_total|intcomma }}</td>
             <td class="num">¥{{ summary.shared_per_person|intcomma }}</td>
             <td class="num muted">—</td>
-          </tr>
-
-          <tr class="sep">
-            <th colspan="4">固定費</th>
           </tr>
 
           <tr>
@@ -81,12 +77,6 @@
             <td class="num muted">—</td>
           </tr>
 
-          <tr class="total">
-            <th class="rowhead">固定費 合計</th>
-            <td class="num">¥{{ summary.fixed_total|intcomma }}</td>
-            <td class="num">¥{{ summary.per_person_total|intcomma }}</td>
-            <td class="num muted">—</td>
-          </tr>
         </tbody>
       </table>
 

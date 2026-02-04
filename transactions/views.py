@@ -349,8 +349,6 @@ def transaction_list(request):
             + summary["wrx_per_person"]
         )
 
-        summary["fixed_total"] = summary["rent"] + summary["rent_renewal"] + summary["wrx"]
-
         # 振込額
         summary["transfer_n"] = summary["n_total"] + summary["per_person_total"]
         summary["transfer_y"] = summary["y_total"] + summary["per_person_total"]
