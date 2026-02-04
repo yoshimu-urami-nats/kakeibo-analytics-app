@@ -618,9 +618,10 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   margin: 0 0 8px 0; /* 12px→8px とか */
 }
 
+/* summary は常に同じ padding に固定（ここがガタつき防止） */
 .summary-shell .acc > summary{
-  /* 見出しの行はカードの中で少しだけ余白を整える */
-  padding: 10px 4px;
+  padding: 10px 12px;     /* 好きな値でOK。とにかく開閉で変えない */
+  line-height: 1.2;       /* 行の高さも固定すると安定する */
 }
 
 /* 中身だけコンパクト幅にする */
@@ -701,6 +702,9 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   opacity: .75;
   transform: translateY(1px);
   transition: transform .15s ease, opacity .15s ease;
+  width: 1.2em;           /* ▼の占有幅を固定（地味に効く） */
+  text-align: right;
+  line-height: 1;         /* ▼の高さブレ防止 */
 }
 
 .acc[open] > summary.acc-title::after{
@@ -710,8 +714,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 
 /* ★閉じた時はもっと薄く（必要なら） */
 .acc:not([open]) > summary{
-  padding: 1px 1px;   /* ← 6px→5px */
-  opacity: .92;       /* ← 少しだけ軽く */
+  opacity: .85;
 }
 
 .acc:not([open]) > summary:hover {
