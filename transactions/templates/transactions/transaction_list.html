@@ -7,81 +7,83 @@
 
   <!-- ▼▼ summaryここから ▼▼ -->
   {% load humanize %}
-  <details class="acc" open>
-    <summary class="acc-title">
-      <span>Summary</span>
-      <span class="muted">（クリックで開閉）</span>
-    </summary>
 
-    <div class="card summary-card summary-compact">
-      <div class="summary-head">
-        <h2 class="h2">Summary</h2>
-        <div class="muted">
-          対象ファイル：
-          {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
-          ／ 確定済みのみ
+  <div class="card summary-panel">
+    <details class="acc" open>
+      <summary class="acc-title">
+        <span>Summary</span>
+        <span class="muted">（クリックで開閉）</span>
+      </summary>
+
+      <div class="summary-inner">
+        <div class="summary-head">
+          <h2 class="h2">Summary</h2>
+          <div class="muted">
+            対象ファイル：
+            {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
+            ／ 確定済みのみ
+          </div>
         </div>
+
+        <!-- サマリテーブル -->
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>合計</th>
+              <th>一人当たり</th>
+              <th>住信SBI振込</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <th class="rowhead">な</th>
+              <td class="num">¥{{ summary.n_total|intcomma }}</td>
+              <td class="num muted">—</td>
+              <td class="num">¥{{ summary.transfer_n|intcomma }}</td>
+            </tr>
+
+            <tr>
+              <th class="rowhead">ゆ</th>
+              <td class="num">¥{{ summary.y_total|intcomma }}</td>
+              <td class="num muted">—</td>
+              <td class="num">¥{{ summary.transfer_y|intcomma }}</td>
+            </tr>
+
+            <tr>
+              <th class="rowhead">共有</th>
+              <td class="num">¥{{ summary.shared_total|intcomma }}</td>
+              <td class="num">¥{{ summary.shared_per_person|intcomma }}</td>
+              <td class="num muted">—</td>
+            </tr>
+
+            <tr>
+              <th class="rowhead">家賃</th>
+              <td class="num">¥{{ summary.rent|intcomma }}</td>
+              <td class="num">¥{{ summary.rent_per_person|intcomma }}</td>
+              <td class="num muted">—</td>
+            </tr>
+
+            <tr>
+              <th class="rowhead">更新料</th>
+              <td class="num">¥{{ summary.rent_renewal|intcomma }}</td>
+              <td class="num">¥{{ summary.rent_renewal_per_person|intcomma }}</td>
+              <td class="num muted">—</td>
+            </tr>
+
+            <tr>
+              <th class="rowhead">WRX</th>
+              <td class="num">¥{{ summary.wrx|intcomma }}</td>
+              <td class="num">¥{{ summary.wrx_per_person|intcomma }}</td>
+              <td class="num muted">—</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </details>
+  </div>
 
-      <!-- サマリテーブル -->
-      <table class="summary-table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>合計</th>
-            <th>一人当たり</th>
-            <th>住信SBI振込</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr>
-            <th class="rowhead">な</th>
-            <td class="num">¥{{ summary.n_total|intcomma }}</td>
-            <td class="num muted">—</td>
-            <td class="num">¥{{ summary.transfer_n|intcomma }}</td>
-          </tr>
-
-          <tr>
-            <th class="rowhead">ゆ</th>
-            <td class="num">¥{{ summary.y_total|intcomma }}</td>
-            <td class="num muted">—</td>
-            <td class="num">¥{{ summary.transfer_y|intcomma }}</td>
-          </tr>
-
-          <tr>
-            <th class="rowhead">共有</th>
-            <td class="num">¥{{ summary.shared_total|intcomma }}</td>
-            <td class="num">¥{{ summary.shared_per_person|intcomma }}</td>
-            <td class="num muted">—</td>
-          </tr>
-
-          <tr>
-            <th class="rowhead">家賃</th>
-            <td class="num">¥{{ summary.rent|intcomma }}</td>
-            <td class="num">¥{{ summary.rent_per_person|intcomma }}</td>
-            <td class="num muted">—</td>
-          </tr>
-
-          <tr>
-            <th class="rowhead">更新料</th>
-            <td class="num">¥{{ summary.rent_renewal|intcomma }}</td>
-            <td class="num">¥{{ summary.rent_renewal_per_person|intcomma }}</td>
-            <td class="num muted">—</td>
-          </tr>
-
-          <tr>
-            <th class="rowhead">WRX</th>
-            <td class="num">¥{{ summary.wrx|intcomma }}</td>
-            <td class="num">¥{{ summary.wrx_per_person|intcomma }}</td>
-            <td class="num muted">—</td>
-          </tr>
-
-        </tbody>
-      </table>
-
-    </div>
-  </details>
   <!-- ▲▲ summaryここまで ▲▲ -->
 
   <div class="card table-head">
