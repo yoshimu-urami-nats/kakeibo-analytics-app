@@ -5,6 +5,73 @@
 <div class="table-page">
   <h1>Table</h1>
 
+  <!-- ▼▼ summaryここから ▼▼ -->
+  {% load humanize %}
+  <details class="acc" open>
+    <summary class="acc-title">
+      <span>Summary</span>
+      <span class="muted">（クリックで開閉）</span>
+    </summary>
+
+    <div class="card summary-card">
+      <div class="summary-head">
+        <h2 class="h2">Summary</h2>
+        <div class="muted">
+          対象ファイル：
+          {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
+          ／ 確定済みのみ
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="muted">な 合計</div>
+          <div class="summary-val">{{ summary.n_total|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">ゆ 合計</div>
+          <div class="summary-val">{{ summary.y_total|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">共有 合計</div>
+          <div class="summary-val">{{ summary.shared_total|intcomma }}</div>
+        </div>
+
+        <div class="summary-item">
+          <div class="muted">共有(1人)</div>
+          <div class="summary-val">{{ summary.shared_per_person|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">家賃(1人)</div>
+          <div class="summary-val">{{ summary.rent_per_person|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">更新料(1人)</div>
+          <div class="summary-val">{{ summary.rent_renewal_per_person|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">WRX(1人)</div>
+          <div class="summary-val">{{ summary.wrx_per_person|intcomma }}</div>
+        </div>
+
+        <div class="summary-item">
+          <div class="muted">共通固定費(1人) 合計</div>
+          <div class="summary-val">{{ summary.per_person_total|intcomma }}</div>
+        </div>
+
+        <div class="summary-item">
+          <div class="muted">な 振込</div>
+          <div class="summary-val">{{ summary.transfer_n|intcomma }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="muted">ゆ 振込</div>
+          <div class="summary-val">{{ summary.transfer_y|intcomma }}</div>
+        </div>
+      </div>
+    </div>
+  </details>
+  <!-- ▲▲ summaryここまで ▲▲ -->
+
   <div class="card table-head">
     <div class="muted">
       対象ファイル：
