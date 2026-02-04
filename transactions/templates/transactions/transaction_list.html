@@ -11,15 +11,13 @@
   <div class="card summary-shell">
     <details class="acc" open>
       <summary class="acc-title">
-        <span>Summary</span>
-        <span class="muted">（クリックで開閉）</span>
+        <span class="acc-label">Summary</span>
       </summary>
 
       <!-- ★内側だけ幅を制限する -->
       <div class="summary-content">
         <div class="summary-inner">
           <div class="summary-head">
-            <h2 class="h2">Summary</h2>
             <div class="muted">
               対象ファイル：
               {% if latest_source %}<b>{{ latest_source }}</b>{% else %}（未取り込み）{% endif %}
