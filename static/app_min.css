@@ -772,3 +772,33 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .home-acc[open] > .summary-content{
   display: block;   /* ← 開いたら表示 */
 }
+
+/* ===== Home 本文トーン調整 ===== */
+
+/* 本文は少しトーンを落とす */
+.home-acc .summary-inner p,
+.home-acc .summary-inner li {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* 箇条書きの・も少し控えめに */
+.home-acc .summary-inner li::marker {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* 見出しはしっかり主役 */
+.home-acc .summary-inner h3 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* 強調したい語だけ戻す用 */
+.home-acc .summary-inner b,
+.home-acc .summary-inner strong {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 600;
+}
+
+.home-acc .summary-inner p,
+.home-acc .summary-inner li {
+  font-size: 0.95rem;
+}
