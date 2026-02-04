@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 def _tokenize_query(q: str):
     """
     q を tokens に分解。
-    - スペース区切りでAND
+    - スペース区切りでAND（半角・全角対応）
     - "-xxx" は除外
     - "xxx yyy" はフレーズ（shlexが対応）
     """
@@ -30,11 +30,22 @@ def _tokenize_query(q: str):
     if not q:
         return [], []
 
+    # ★ 全角スペース → 半角スペースに正規化
+    q = q.replace("　", " ")
+
     try:
         parts = shlex.split(q)  # "..." 対応
     except ValueError:
-        # クォート崩れた時は雑にsplitで救済
         parts = q.split()
+
+    positives = []
+    negatives = []
+    for p in parts:
+        if p.startswith("-") and len(p) > 1:
+            negatives.append(p[1:])
+        else:
+            positives.append(p)
+    return positives, negatives
 
     positives = []
     negatives = []
