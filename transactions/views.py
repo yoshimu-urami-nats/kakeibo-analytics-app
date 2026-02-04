@@ -2,6 +2,7 @@
 import csv
 import io
 import re
+import shlex
 from datetime import datetime, date
 
 from django.contrib import messages
@@ -18,6 +19,32 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 
+def _tokenize_query(q: str):
+    """
+    q を tokens に分解。
+    - スペース区切りでAND
+    - "-xxx" は除外
+    - "xxx yyy" はフレーズ（shlexが対応）
+    """
+    q = (q or "").strip()
+    if not q:
+        return [], []
+
+    try:
+        parts = shlex.split(q)  # "..." 対応
+    except ValueError:
+        # クォート崩れた時は雑にsplitで救済
+        parts = q.split()
+
+    positives = []
+    negatives = []
+    for p in parts:
+        if p.startswith("-") and len(p) > 1:
+            negatives.append(p[1:])
+        else:
+            positives.append(p)
+    return positives, negatives
+
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
     # 例: 2025-11-30 / 2025/11/30 どっちでもOKにする
@@ -27,6 +54,65 @@ def _parse_date(s: str) -> date:
         except ValueError:
             pass
     raise ValueError(f"日付形式が不正: {s}")
+
+def _build_cond_for_token(token: str, latest_source: str | None):
+    token = (token or "").strip()
+    if not token:
+        return Q()
+
+    cond = (
+        Q(shop__icontains=token)
+        | Q(memo__icontains=token)
+        | Q(source_file__icontains=token)
+        | Q(category__name__icontains=token)
+        | Q(member__name__icontains=token)
+    )
+
+    # IDっぽい
+    if token.isdigit():
+        cond |= Q(id=int(token))
+
+    # 金額っぽい
+    amt = token.replace(",", "").replace("円", "")
+    if amt.isdigit():
+        cond |= Q(amount=int(amt))
+
+    # 日付：完全一致
+    try:
+        d = _parse_date(token)
+        cond |= Q(date=d)
+    except Exception:
+        pass
+
+    # 月/日だけ（例: 1/15）
+    m_md = re.match(r"^(\d{1,2})[/-](\d{1,2})$", token)
+    if m_md and latest_source:
+        month = int(m_md.group(1))
+        day = int(m_md.group(2))
+        m_year = re.match(r"^(\d{4})", latest_source)
+        if m_year:
+            year = int(m_year.group(1))
+            try:
+                d = date(year, month, day)
+                cond |= Q(date=d)
+            except ValueError:
+                pass
+
+    # 年月：2026-01 / 2026/01
+    m = re.match(r"^(\d{4})[-/](\d{1,2})$", token)
+    if m:
+        y = int(m.group(1))
+        mo = int(m.group(2))
+        if 1 <= mo <= 12:
+            cond |= Q(date__year=y, date__month=mo)
+
+    # 確定（済/未）
+    if token in ("済", "確定", "closed"):
+        cond |= Q(is_closed=True)
+    elif token in ("未", "未確定", "open"):
+        cond |= Q(is_closed=False)
+
+    return cond
 
 
 def _parse_amount(s: str) -> int:
@@ -232,63 +318,16 @@ def transaction_list(request):
     if edit_mode and not show_all:
         qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
 
-    q = (request.GET.get("q") or "").strip()
-    if q:
-        cond = (
-            Q(shop__icontains=q)
-            | Q(memo__icontains=q)
-            | Q(source_file__icontains=q)
-            | Q(category__name__icontains=q)
-            | Q(member__name__icontains=q)
-        )
+    q_raw = (request.GET.get("q") or "").strip()
+    pos, neg = _tokenize_query(q_raw)
 
-        # IDっぽいなら id= も候補に入れる
-        if q.isdigit():
-            cond |= Q(id=int(q))
+    # AND（posを全部満たす）
+    for t in pos:
+        qs = qs.filter(_build_cond_for_token(t, latest_source))
 
-        # 金額っぽい（カンマ/円を許容）なら amount= も候補に入れる
-        amt = q.replace(",", "").replace("円", "")
-        if amt.isdigit():
-            cond |= Q(amount=int(amt))
-
-        # 日付：完全一致（2026-01-15 / 2026/01/15）
-        try:
-            d = _parse_date(q)
-            cond |= Q(date=d)
-        except Exception:
-            pass
-
-        # 月/日だけ指定（例: 1/15, 01/15）
-        m_md = re.match(r"^(\d{1,2})[/-](\d{1,2})$", q)
-        if m_md and latest_source:
-            month = int(m_md.group(1))
-            day = int(m_md.group(2))
-
-            # latest_source = "202602.csv" みたいなのを想定
-            m_year = re.match(r"^(\d{4})", latest_source)
-            if m_year:
-                year = int(m_year.group(1))
-                try:
-                    d = date(year, month, day)
-                    cond |= Q(date=d)
-                except ValueError:
-                    pass
-
-        # 年月：2026-01 / 2026/01 でその月のデータ
-        m = re.match(r"^(\d{4})[-/](\d{1,2})$", q)
-        if m:
-            y = int(m.group(1))
-            mo = int(m.group(2))
-            if 1 <= mo <= 12:
-                cond |= Q(date__year=y, date__month=mo)
-
-        # 確定（済/未）でも引けるように（お好みで）
-        if q in ("済", "確定", "closed"):
-            cond |= Q(is_closed=True)
-        elif q in ("未", "未確定", "open"):
-            cond |= Q(is_closed=False)
-
-        qs = qs.filter(cond)
+    # NOT（negを除外）
+    for t in neg:
+        qs = qs.exclude(_build_cond_for_token(t, latest_source))
 
     transactions = qs
 
@@ -392,56 +431,14 @@ def transaction_rows(request):
     if edit_mode and not show_all:
         qs = qs.filter(Q(category__isnull=True) | Q(member__isnull=True))
 
-    # ★ここは既に作ってある検索ロジックを「そのままコピペ」でOK
-    q = (request.GET.get("q") or "").strip()
-    if q:
-        cond = (
-            Q(shop__icontains=q)
-            | Q(memo__icontains=q)
-            | Q(source_file__icontains=q)
-            | Q(category__name__icontains=q)
-            | Q(member__name__icontains=q)
-        )
+    q_raw = (request.GET.get("q") or "").strip()
+    pos, neg = _tokenize_query(q_raw)
 
-        if q.isdigit():
-            cond |= Q(id=int(q))
+    for t in pos:
+        qs = qs.filter(_build_cond_for_token(t, latest_source))
 
-        amt = q.replace(",", "").replace("円", "")
-        if amt.isdigit():
-            cond |= Q(amount=int(amt))
-
-        try:
-            d = _parse_date(q)
-            cond |= Q(date=d)
-        except Exception:
-            pass
-
-        m_md = re.match(r"^(\d{1,2})[/-](\d{1,2})$", q)
-        if m_md and latest_source:
-            month = int(m_md.group(1))
-            day = int(m_md.group(2))
-            m_year = re.match(r"^(\d{4})", latest_source)
-            if m_year:
-                year = int(m_year.group(1))
-                try:
-                    d = date(year, month, day)
-                    cond |= Q(date=d)
-                except ValueError:
-                    pass
-
-        m = re.match(r"^(\d{4})[-/](\d{1,2})$", q)
-        if m:
-            y = int(m.group(1))
-            mo = int(m.group(2))
-            if 1 <= mo <= 12:
-                cond |= Q(date__year=y, date__month=mo)
-
-        if q in ("済", "確定", "closed"):
-            cond |= Q(is_closed=True)
-        elif q in ("未", "未確定", "open"):
-            cond |= Q(is_closed=False)
-
-        qs = qs.filter(cond)
+    for t in neg:
+        qs = qs.exclude(_build_cond_for_token(t, latest_source))
 
     html = render_to_string(
         "transactions/_transaction_rows.html",

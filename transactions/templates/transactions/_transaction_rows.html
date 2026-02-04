@@ -25,5 +25,7 @@
     <td>{% if t.is_closed %}<span class="pill ok">済</span>{% else %}<span class="pill">未</span>{% endif %}</td>
 </tr>
 {% empty %}
-<tr><td colspan="8" class="muted">データがありません</td></tr>
+<tr>
+  <td colspan="{% if edit_mode %}9{% else %}8{% endif %}" class="muted">データがありません</td>
+</tr>
 {% endfor %}
