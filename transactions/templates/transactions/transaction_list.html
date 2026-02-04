@@ -23,51 +23,73 @@
         </div>
       </div>
 
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="muted">な 合計</div>
-          <div class="summary-val">{{ summary.n_total|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">ゆ 合計</div>
-          <div class="summary-val">{{ summary.y_total|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">共有 合計</div>
-          <div class="summary-val">{{ summary.shared_total|intcomma }}</div>
-        </div>
+      <!-- サマリテーブル -->
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>合計</th>
+            <th>一人当たり</th>
+            <th>住信SBI振込</th>
+          </tr>
+        </thead>
 
-        <div class="summary-item">
-          <div class="muted">共有(1人)</div>
-          <div class="summary-val">{{ summary.shared_per_person|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">家賃(1人)</div>
-          <div class="summary-val">{{ summary.rent_per_person|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">更新料(1人)</div>
-          <div class="summary-val">{{ summary.rent_renewal_per_person|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">WRX(1人)</div>
-          <div class="summary-val">{{ summary.wrx_per_person|intcomma }}</div>
-        </div>
+        <tbody>
+          <tr>
+            <th class="rowhead">な</th>
+            <td class="num">¥{{ summary.n_total|intcomma }}</td>
+            <td class="num muted">¥0</td>
+            <td class="num">¥{{ summary.transfer_n|intcomma }}</td>
+          </tr>
 
-        <div class="summary-item">
-          <div class="muted">共通固定費(1人) 合計</div>
-          <div class="summary-val">{{ summary.per_person_total|intcomma }}</div>
-        </div>
+          <tr>
+            <th class="rowhead">ゆ</th>
+            <td class="num">¥{{ summary.y_total|intcomma }}</td>
+            <td class="num muted">¥0</td>
+            <td class="num">¥{{ summary.transfer_y|intcomma }}</td>
+          </tr>
 
-        <div class="summary-item">
-          <div class="muted">な 振込</div>
-          <div class="summary-val">{{ summary.transfer_n|intcomma }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="muted">ゆ 振込</div>
-          <div class="summary-val">{{ summary.transfer_y|intcomma }}</div>
-        </div>
-      </div>
+          <tr>
+            <th class="rowhead">共有</th>
+            <td class="num">¥{{ summary.shared_total|intcomma }}</td>
+            <td class="num">¥{{ summary.shared_per_person|intcomma }}</td>
+            <td class="num muted">—</td>
+          </tr>
+
+          <tr class="sep">
+            <th colspan="4">固定費</th>
+          </tr>
+
+          <tr>
+            <th class="rowhead">家賃</th>
+            <td class="num">¥{{ summary.rent|intcomma }}</td>
+            <td class="num">¥{{ summary.rent_per_person|intcomma }}</td>
+            <td class="num muted">—</td>
+          </tr>
+
+          <tr>
+            <th class="rowhead">更新料</th>
+            <td class="num">¥{{ summary.rent_renewal|intcomma }}</td>
+            <td class="num">¥{{ summary.rent_renewal_per_person|intcomma }}</td>
+            <td class="num muted">—</td>
+          </tr>
+
+          <tr>
+            <th class="rowhead">WRX</th>
+            <td class="num">¥{{ summary.wrx|intcomma }}</td>
+            <td class="num">¥{{ summary.wrx_per_person|intcomma }}</td>
+            <td class="num muted">—</td>
+          </tr>
+
+          <tr class="total">
+            <th class="rowhead">固定費 合計</th>
+            <td class="num">¥{{ summary.fixed_total|intcomma }}</td>
+            <td class="num">¥{{ summary.per_person_total|intcomma }}</td>
+            <td class="num muted">—</td>
+          </tr>
+        </tbody>
+      </table>
+
     </div>
   </details>
   <!-- ▲▲ summaryここまで ▲▲ -->

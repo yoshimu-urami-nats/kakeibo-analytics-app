@@ -570,6 +570,59 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   font-variant-numeric: tabular-nums;
 }
 
+/* ===== Summary table ===== */
+.summary-table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.summary-table th,
+.summary-table td{
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.summary-table thead th{
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+  font-weight: 600;
+  text-align: left;
+}
+
+.summary-table tbody tr:nth-child(even){
+  background: rgba(255,255,255,.03);
+}
+
+.summary-table .rowhead{
+  width: 120px;
+  color: rgba(255,255,255,.90);
+}
+
+.summary-table .num{
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-table .sep th{
+  background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.75);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.summary-table .total th,
+.summary-table .total td{
+  border-bottom: none;
+  background: rgba(165,190,135,.08);
+  font-weight: 700;
+}
+
+
 /* ===== Accordion (details) ===== */
 .acc{
   border-radius: 16px;
