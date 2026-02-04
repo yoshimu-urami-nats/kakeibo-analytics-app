@@ -37,9 +37,6 @@ urlpatterns = [
 
     path('transactions/', include('transactions.urls', namespace='transactions')),
 
-    # トップページ
-    path('', views.home, name='home'),
-
     # ★ Home / CSV Import / EDA / Prediction
     path('', views.home, name='home'),
     path('import/', views.csv_import, name='csv_import'),

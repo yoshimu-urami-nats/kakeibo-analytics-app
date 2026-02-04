@@ -52,6 +52,7 @@ def _decode_csv_bytes(b: bytes) -> str:
 
 
 @require_http_methods(["GET", "POST"])
+@login_required
 def transaction_list(request):
 
     edit_mode = request.GET.get("edit") == "1"
@@ -369,9 +370,6 @@ def transaction_list(request):
     )
 
 @login_required
-def summary(request):
-    return render(request, "transactions/summary.html")
-
 def transaction_rows(request):
     # ここは transaction_list の GET 部分と同じ条件で qs を作るだけ
     edit_mode = request.GET.get("edit") == "1"

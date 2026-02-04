@@ -7,6 +7,5 @@ app_name = "transactions"
 urlpatterns = [
     path("", views.transaction_list, name="list"),
     path("rows/", views.transaction_rows, name="rows"),
-    path("summary/", views.summary, name="summary"),
 ]
 
