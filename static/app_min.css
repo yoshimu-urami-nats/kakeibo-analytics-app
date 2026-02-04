@@ -720,3 +720,23 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .acc:not([open]) > summary:hover {
   opacity: 1;
 }
+
+/* Homeカード用 */
+.card p{
+  line-height: 1.7;
+  margin: 8px 0;
+}
+
+.card ul{
+  margin: 8px 0 10px 18px;
+}
+
+.card li{
+  margin: 4px 0;
+}
+
+.card hr{
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  margin: 14px 0;
+}

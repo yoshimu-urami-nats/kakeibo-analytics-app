@@ -47,15 +47,6 @@ def _tokenize_query(q: str):
             positives.append(p)
     return positives, negatives
 
-    positives = []
-    negatives = []
-    for p in parts:
-        if p.startswith("-") and len(p) > 1:
-            negatives.append(p[1:])
-        else:
-            positives.append(p)
-    return positives, negatives
-
 def _parse_date(s: str) -> date:
     s = (s or "").strip()
     # 例: 2025-11-30 / 2025/11/30 どっちでもOKにする
