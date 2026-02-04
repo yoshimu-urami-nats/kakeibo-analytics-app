@@ -651,7 +651,9 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .acc{
   border-radius: 16px;
 }
+
 .acc > summary{
+  transition: opacity 1s ease;
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -663,6 +665,27 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .acc > summary::-webkit-details-marker{
   display:none;
 }
+
+/* duration を一箇所で管理（確認用に長め） */
+:root { --acc-dur: 0.25s; } /* 確認したいなら 5s とかに */
+
+.acc > .summary-content{
+  overflow: hidden;
+  height: 0;
+  opacity: 0;
+  transition: height var(--acc-dur) ease, opacity var(--acc-dur) ease;
+}
+
+.acc[open] > .summary-content{
+  opacity: 1;
+}
+
+
+/* 実コンテンツ */
+.acc > .summary-content > * {
+  min-height: 0; /* ← これ超重要（ないと効かない） */
+}
+
 
 /* 見出しの左右配置 */
 .acc-title{
@@ -689,4 +712,8 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 .acc:not([open]) > summary{
   padding: 1px 1px;   /* ← 6px→5px */
   opacity: .92;       /* ← 少しだけ軽く */
+}
+
+.acc:not([open]) > summary:hover {
+  opacity: 1;
 }

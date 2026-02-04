@@ -278,4 +278,61 @@
   })();
 </script>
 
+<script>
+(function(){
+  const details = document.querySelector(".summary-shell details.acc");
+  if(!details) return;
+
+  const summary = details.querySelector("summary");
+  const content = details.querySelector(".summary-content");
+  if(!summary || !content) return;
+
+  // 初期状態：open なら高さを auto にしておく
+  if(details.open){
+    content.style.height = "auto";
+    content.style.opacity = "1";
+  }
+
+  summary.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const isOpen = details.open;
+
+    if(!isOpen){
+      // OPEN
+      details.open = true;                 // 先に open にする（中身を計測できるように）
+      content.style.height = "0px";        // 0 から
+      content.offsetHeight;                // reflow
+      const h = content.scrollHeight;
+      content.style.height = h + "px";
+      content.style.opacity = "1";
+
+      // 終わったら auto に戻す（中身が増減しても崩れない）
+      const onEnd = (ev) => {
+        if(ev.propertyName !== "height") return;
+        content.style.height = "auto";
+        content.removeEventListener("transitionend", onEnd);
+      };
+      content.addEventListener("transitionend", onEnd);
+
+    } else {
+      // CLOSE
+      const h = content.scrollHeight;      // auto だと取れないことがあるので一旦 px 固定
+      content.style.height = h + "px";
+      content.offsetHeight;                // reflow
+      content.style.height = "0px";
+      content.style.opacity = "0";
+
+      const onEnd = (ev) => {
+        if(ev.propertyName !== "height") return;
+        details.open = false;              // アニメ後に閉じる（ここが肝）
+        content.removeEventListener("transitionend", onEnd);
+      };
+      content.addEventListener("transitionend", onEnd);
+    }
+  });
+})();
+</script>
+
+
 {% endblock %}
