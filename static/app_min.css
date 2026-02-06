@@ -620,9 +620,11 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 
 /* summary は常に同じ padding に固定（ここがガタつき防止） */
 .summary-shell .acc > summary{
-  padding: 10px 12px;     /* 好きな値でOK。とにかく開閉で変えない */
+  padding: 2px 0px;     /* 好きな値でOK。とにかく開閉で変えない */
   line-height: 1.2;       /* 行の高さも固定すると安定する */
 }
+
+
 
 /* 中身だけコンパクト幅にする */
 .summary-content{
