@@ -849,3 +849,16 @@ h1{ margin: 0 0 0px; font-size: 26px; }
 .home-acc .summary-inner hr{
   margin: 1.0em 0;
 }
+
+/* 一括操作：適用ボタンだけ控えめに */
+.bulk-card .btn {
+  color: rgba(255,255,255,.75);              /* 白寄りだけど弱め */
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);         /* うっすらだけ */
+}
+
+.bulk-card .btn:hover{
+  color: rgb(165,190,135);                   /* ぷーちく色に寄せる */
+  border-color: rgba(165,190,135,.45);
+  background: rgba(165,190,135,.10);
+}
