@@ -80,13 +80,15 @@ body { margin: 0; background:#121212; color:#eee; font-family: system-ui, "Meiry
 
 .main{ flex:1; padding: 24px; }
 .panel{ max-width: 1200px; }
-h1{ margin: 0 0 12px; font-size: 26px; }
+
+h1{ margin: 0 0 0px; font-size: 26px; }
+
 .card{
   background: #1b1b1b;
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 16px;
   padding: 16px;
-  margin: 12px 0;
+  margin: 0px 0;
 }
 
 /* Djangoページのぷーちくロゴ */
@@ -392,7 +394,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
   height: calc(100vh - 48px); /* .main の上下padding 24px*2 を引く */
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* flexの子がちゃんと縮められるように */
@@ -615,7 +617,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 
 /* ===== Summary: 外枠は他カードと同じ幅 / 中身だけ小さく ===== */
 .summary-shell{
-  margin: 0 0 8px 0; /* 12px→8px とか */
+  margin-bottom: 0; /* gap に任せる */
 }
 
 /* summary は常に同じ padding に固定（ここがガタつき防止） */
