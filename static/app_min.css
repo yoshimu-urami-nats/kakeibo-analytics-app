@@ -581,7 +581,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 
 .summary-table th,
 .summary-table td{
-  padding: 10px 12px;
+  padding: 6px 10px;
   border-bottom: 1px solid rgba(255,255,255,.08);
   font-size: 13px;
   white-space: nowrap;
@@ -599,7 +599,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 }
 
 .summary-table .rowhead{
-  width: 120px;
+  width: 100px;
   color: rgba(255,255,255,.90);
 }
 
@@ -628,7 +628,7 @@ h1{ margin: 0 0 12px; font-size: 26px; }
 
 /* 中身だけコンパクト幅にする */
 .summary-content{
-  max-width: 680px;   /* ←ここが“テーブルサイズを変えない”肝 */
+  max-width: 400px;   /* ←ここが“テーブルサイズを変えない”肝 */
 }
 
 /* 左寄せ＆上詰め */
