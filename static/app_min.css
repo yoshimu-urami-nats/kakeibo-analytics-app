@@ -292,6 +292,90 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   justify-content: flex-end;
 }
 
+/* ===== 編集モード Toggle（iOS寄せ） ===== */
+.edit-toggle{
+  display: grid;
+  gap: 4px;
+  justify-items: start;   /* ← end → start に変更（左寄せ） */
+  width: 66px;            /* ← トグル幅と合わせる（左端が揃って気持ちいい） */
+}
+
+.edit-toggle-label{
+  font-size: 11px;
+  color: rgba(255,255,255,.55);
+  line-height: 1;
+  user-select: none;
+  text-align: left;       /* 念のため */
+}
+
+/* トラック */
+.toggle{
+  width: 66px;                 /* ← 横幅ちょい狭く */
+  height: 30px;                /* iOSっぽい高さ */
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  display: inline-block;
+  position: relative;
+  overflow: visible;           /* ← ノブを枠より大きくしてもOKに */
+  text-decoration: none;
+
+  transition: background .18s ease, border-color .18s ease, filter .15s ease;
+}
+
+/* ノブ（枠より少し大きく） */
+.toggle-knob{
+  width: 34px;                 /* ← トラック(30px)よりデカくしてiOS感 */
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  box-shadow:
+    0 6px 14px rgba(0,0,0,.35),
+    0 0 0 2px rgba(0,0,0,.18) inset;
+
+  position: absolute;
+  top: 50%;
+  left: 2px;                   /* 左端の余白 */
+  transform: translate(0, -50%);
+
+  transition: transform .28s cubic-bezier(.2,.85,.25,1);
+  will-change: transform;
+}
+
+/* OFF */
+.toggle.off{
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.12);
+}
+
+/* ON（色を“ONっぽく”濃く明るく） */
+.toggle.on{
+  background: rgba(165,190,135,.28);
+  border-color: rgba(165,190,135,.60);
+  box-shadow: 0 0 0 3px rgba(165,190,135,.10) inset;
+}
+
+/* ノブ移動：移動量 = トラック幅(66) - ノブ(34) - 左右余白(2+2) = 28px */
+.toggle.on .toggle-knob{
+  transform: translate(28px, -50%);
+}
+
+/* hover */
+.toggle:hover{ filter: brightness(1.06); }
+
+/* キーボード操作の視認性 */
+.toggle:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(128,191,255,.25);
+}
+
+/* 動きを減らしたい環境ではアニメ抑制 */
+@media (prefers-reduced-motion: reduce){
+  .toggle, .toggle-knob{ transition: none; }
+}
+
+
+
 .h2{ margin: 0 0 10px; font-size: 16px; }
 
 .bulk-grid{

@@ -102,19 +102,39 @@
             value="{{ request.GET.q|default:'' }}">
 
       <div class="toolbar-actions">
-        {% if edit_mode %}
-          <a class="btn" href="?">編集OFF</a>
-        {% else %}
-          <a class="btn" href="?edit=1">編集ON</a>
-        {% endif %}
 
+        <!-- ① 編集モード：トグル（見た目はトグル、挙動はリンク） -->
+        <div class="edit-toggle">
+          <div class="edit-toggle-label">編集モード</div>
+
+          {% if edit_mode %}
+            <a class="toggle on"
+              href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}{% endif %}"
+              aria-label="編集モードをOFFにする">
+              <span class="toggle-knob" aria-hidden="true"></span>
+            </a>
+          {% else %}
+            <a class="toggle off"
+              href="?edit=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+              aria-label="編集モードをONにする">
+              <span class="toggle-knob" aria-hidden="true"></span>
+            </a>
+          {% endif %}
+        </div>
+
+
+
+        <!-- ② 表示切替：編集OFFでも“枠だけ”出して位置固定 -->
         {% if edit_mode %}
           {% if show_all %}
-            <a class="btn" href="?edit=1">未割当のみ</a>
+            <a class="btn" href="?edit=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">未割当のみ</a>
           {% else %}
-            <a class="btn" href="?edit=1&all=1">全件表示</a>
+            <a class="btn" href="?edit=1&all=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">全件表示</a>
           {% endif %}
+        {% else %}
+          <span class="btn is-disabled" aria-disabled="true">全件表示</span>
         {% endif %}
+
       </div>
     </form>
   </div>
@@ -354,6 +374,36 @@
   });
 })();
 </script>
+
+<script>
+(function(){
+  const toggle = document.querySelector(".edit-toggle a.toggle");
+  if(!toggle) return;
+
+  toggle.addEventListener("click", (e) => {
+    // 新規タブ/別操作は邪魔しない
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+    e.preventDefault();
+    const href = toggle.getAttribute("href");
+
+    // クリックした瞬間だけ見た目を反転させて、ノブを“ぬるっ”と動かす
+    if (toggle.classList.contains("on")) {
+      toggle.classList.remove("on");
+      toggle.classList.add("off");
+    } else {
+      toggle.classList.remove("off");
+      toggle.classList.add("on");
+    }
+
+    // アニメが見える時間だけ待ってから遷移
+    window.setTimeout(() => {
+      window.location.href = href;
+    }, 160); // 好みで 120〜220 くらい
+  });
+})();
+</script>
+
 
 
 {% endblock %}
