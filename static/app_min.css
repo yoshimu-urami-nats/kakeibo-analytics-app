@@ -321,21 +321,24 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   text-decoration: none;
 
   transition: background .18s ease, border-color .18s ease, filter .15s ease;
+
+  transform: scale(0.7);
+  transform-origin: left center; /* 左基準で縮むから、位置がズレにくい */
 }
 
-/* ノブ（枠より少し大きく） */
+/* ノブ（枠より少し大きく：でもデカすぎない） */
 .toggle-knob{
-  width: 34px;                 /* ← トラック(30px)よりデカくしてiOS感 */
-  height: 34px;
+  width: 32px;                 /* 34 → 32（少し小さく） */
+  height: 32px;
   border-radius: 999px;
-  background: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.86);  /* 92 → 86（白すぎ防止） */
   box-shadow:
     0 6px 14px rgba(0,0,0,.35),
     0 0 0 2px rgba(0,0,0,.18) inset;
 
   position: absolute;
   top: 50%;
-  left: 2px;                   /* 左端の余白 */
+  left: 2px;
   transform: translate(0, -50%);
 
   transition: transform .28s cubic-bezier(.2,.85,.25,1);
@@ -355,9 +358,9 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   box-shadow: 0 0 0 3px rgba(165,190,135,.10) inset;
 }
 
-/* ノブ移動：移動量 = トラック幅(66) - ノブ(34) - 左右余白(2+2) = 28px */
+/* ノブ移動：移動量 = トラック幅(66) - ノブ(32) - 左右余白(2+2) = 30px */
 .toggle.on .toggle-knob{
-  transform: translate(28px, -50%);
+  transform: translate(30px, -50%);
 }
 
 /* hover */
@@ -373,8 +376,6 @@ h1{ margin: 0 0 0px; font-size: 26px; }
 @media (prefers-reduced-motion: reduce){
   .toggle, .toggle-knob{ transition: none; }
 }
-
-
 
 .h2{ margin: 0 0 10px; font-size: 16px; }
 
