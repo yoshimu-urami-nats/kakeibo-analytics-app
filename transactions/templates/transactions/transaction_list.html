@@ -9,7 +9,7 @@
   {% load humanize %}
 
   <div class="card summary-shell">
-    <details class="acc" open>
+    <details class="acc">
       <summary class="acc-title">
         <span class="acc-label">Summary</span>
       </summary>
@@ -287,10 +287,31 @@
   const content = details.querySelector(".summary-content");
   if(!summary || !content) return;
 
-  // 初期状態：open なら高さを auto にしておく
-  if(details.open){
+  const curPath = window.location.pathname;          // /transactions/
+  const ref = document.referrer || "";               // 直前URL
+  let shouldOpen = false;
+
+  if(ref){
+    try{
+      const refUrl = new URL(ref);
+      // 同一オリジン かつ 直前が /transactions/ 以外なら「別ページから来た」とみなす
+      if(refUrl.origin === window.location.origin && !refUrl.pathname.startsWith(curPath)){
+        shouldOpen = true;
+      }
+    }catch(e){
+      // referrer が変な形式なら無視（閉じのまま）
+    }
+  }
+
+  if(shouldOpen){
+    details.open = true;
     content.style.height = "auto";
     content.style.opacity = "1";
+  }else{
+    // 編集ON/OFFなど（同ページ内遷移）のときは常に閉じ
+    details.open = false;
+    content.style.height = "0px";
+    content.style.opacity = "0";
   }
 
   summary.addEventListener("click", (e) => {
