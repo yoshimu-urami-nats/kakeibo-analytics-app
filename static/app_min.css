@@ -317,6 +317,24 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   color: rgba(255,255,255,.85);
 }
 
+/* ===== select（プルダウン中）トーン調整 ===== */
+.select option{
+  background: #1b1b1b;              /* cardと同じ */
+  color: rgba(255,255,255,.85);
+}
+
+.select option:hover,
+.select option:checked{
+  background: rgba(165,190,135,.25); /* ぷーちく薄 */
+  color: rgb(165,190,135);
+}
+
+/* プレースホルダ用 option */
+.select option[value=""]{
+  color: rgba(255,255,255,.45);
+}
+
+
 .table-wrap{ overflow:auto; border-radius: 14px; }
 
 /* テーブル見た目 */
