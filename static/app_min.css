@@ -965,3 +965,10 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   border-color: rgba(165,190,135,.45);
   background: rgba(165,190,135,.10);
 }
+
+/* トグル無効 */
+.toggle.is-disabled{
+  opacity: .45;
+  pointer-events: none;
+  filter: grayscale(.2);
+}
