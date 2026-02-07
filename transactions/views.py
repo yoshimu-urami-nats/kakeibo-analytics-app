@@ -162,7 +162,20 @@ def transaction_list(request):
 
         if not ids:
           messages.error(request, "チェックされた行がないよ")
-          return redirect(request.path + ("?edit=1" if edit_mode else ""))
+
+          q_keep = (request.POST.get("q") or "").strip()
+
+          params = []
+          if edit_mode:
+              params.append("edit=1")
+              if show_all:
+                  params.append("all=1")
+          if q_keep:
+              from urllib.parse import quote
+              params.append("q=" + quote(q_keep))
+
+          qs_suffix = ("?" + "&".join(params)) if params else ""
+          return redirect(request.path + qs_suffix)
 
         qs = Transaction.objects.filter(id__in=ids)
         if latest_source:
@@ -191,12 +204,18 @@ def transaction_list(request):
             updated = qs2.update(is_closed=True)
             messages.success(request, f"確定にしました：{updated}件")
 
-        qs_suffix = ""
-        if edit_mode:
-            qs_suffix = "?edit=1"
-            if show_all:
-                qs_suffix += "&all=1"
+        q_keep = (request.POST.get("q") or "").strip()
 
+        params = []
+        if edit_mode:
+            params.append("edit=1")
+            if show_all:
+                params.append("all=1")
+        if q_keep:
+            from urllib.parse import quote
+            params.append("q=" + quote(q_keep))
+
+        qs_suffix = ("?" + "&".join(params)) if params else ""
         return redirect(request.path + qs_suffix)
 
     if request.method == "POST":

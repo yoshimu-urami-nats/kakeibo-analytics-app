@@ -161,39 +161,41 @@
 
     <form method="post" id="bulkForm">
       {% csrf_token %}
-      <input type="hidden" name="selected_ids" id="selectedIds" value="">
-      <div class="bulk-grid">
-        <div class="bulk-item">
-          <div class="muted">カテゴリ一括</div>
-          <div class="bulk-row">
-            <select name="category_id" class="select">
-              <option value="">カテゴリを選択</option>
-              {% for c in categories %}
-                <option value="{{ c.id }}">{{ c.name }}</option>
-              {% endfor %}
-            </select>
-            <button class="btn" type="submit" name="bulk_action" value="category">適用</button>
+        <input type="hidden" name="q" id="bulkQ" value="{{ request.GET.q|default:'' }}">
+        <input type="hidden" name="selected_ids" id="selectedIds" value="">
+
+        <div class="bulk-grid">
+          <div class="bulk-item">
+            <div class="muted">カテゴリ一括</div>
+            <div class="bulk-row">
+              <select name="category_id" class="select">
+                <option value="">カテゴリを選択</option>
+                {% for c in categories %}
+                  <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn" type="submit" name="bulk_action" value="category">適用</button>
+            </div>
+          </div>
+
+          <div class="bulk-item">
+            <div class="muted">メンバー一括</div>
+            <div class="bulk-row">
+              <select name="member_id" class="select">
+                <option value="">メンバーを選択</option>
+                {% for m in members %}
+                  <option value="{{ m.id }}">{{ m.name }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn" type="submit" name="bulk_action" value="member">適用</button>
+            </div>
+          </div>
+
+          <div class="bulk-item">
+            <div class="muted">確定（カテゴリ&メンバー埋まってる行だけ）</div>
+            <button class="btn btn-primary" type="submit" name="bulk_action" value="confirm">確定する</button>
           </div>
         </div>
-
-        <div class="bulk-item">
-          <div class="muted">メンバー一括</div>
-          <div class="bulk-row">
-            <select name="member_id" class="select">
-              <option value="">メンバーを選択</option>
-              {% for m in members %}
-                <option value="{{ m.id }}">{{ m.name }}</option>
-              {% endfor %}
-            </select>
-            <button class="btn" type="submit" name="bulk_action" value="member">適用</button>
-          </div>
-        </div>
-
-        <div class="bulk-item">
-          <div class="muted">確定（カテゴリ&メンバー埋まってる行だけ）</div>
-          <button class="btn btn-primary" type="submit" name="bulk_action" value="confirm">確定する</button>
-        </div>
-      </div>
     </form>
   </div>
   {% endif %}
@@ -256,11 +258,18 @@
 
   bulkForm.addEventListener("submit", (e) => {
     sync();
+
+    // ★追加：検索窓の値を hidden(q) に詰め直す（URLにqが無くても維持できる）
+    const qInput = document.querySelector('form.table-toolbar input[name="q"]');
+    const bulkQ = document.getElementById("bulkQ");
+    if (bulkQ && qInput) bulkQ.value = (qInput.value || "").trim();
+
     if(!selectedIds.value){
       e.preventDefault();
       alert("チェックされた行がないよ");
     }
   });
+
 
   // ★ 初回
   bindChecks();
