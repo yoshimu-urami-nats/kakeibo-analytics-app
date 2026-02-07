@@ -225,37 +225,51 @@
 </div>
 
 <script>
-  (function(){
-    const checkAll = document.getElementById("checkAll");
-    const checks = Array.from(document.querySelectorAll(".rowCheck"));
-    const selectedIds = document.getElementById("selectedIds");
-    const bulkForm = document.getElementById("bulkForm");
+(function(){
+  const bulkForm = document.getElementById("bulkForm");
+  if(!bulkForm) return;
 
-    if(!bulkForm) return;
+  const selectedIds = document.getElementById("selectedIds");
+  const checkAll = document.getElementById("checkAll");
 
-    function sync(){
-      const ids = checks.filter(c => c.checked).map(c => c.value);
-      selectedIds.value = ids.join(",");
-    }
+  function getChecks(){
+    return Array.from(document.querySelectorAll(".rowCheck"));
+  }
+
+  function sync(){
+    const ids = getChecks().filter(c => c.checked).map(c => c.value);
+    selectedIds.value = ids.join(",");
+  }
+
+  function bindChecks(){
+    const checks = getChecks();
+    checks.forEach(c => c.addEventListener("change", sync));
 
     if(checkAll){
+      checkAll.checked = false;
       checkAll.addEventListener("change", () => {
         checks.forEach(c => c.checked = checkAll.checked);
         sync();
       });
     }
+  }
 
-    checks.forEach(c => c.addEventListener("change", sync));
+  bulkForm.addEventListener("submit", (e) => {
+    sync();
+    if(!selectedIds.value){
+      e.preventDefault();
+      alert("チェックされた行がないよ");
+    }
+  });
 
-    bulkForm.addEventListener("submit", (e) => {
-      sync();
-      if(!selectedIds.value){
-        e.preventDefault();
-        alert("チェックされた行がないよ");
-      }
-    });
-  })();
+  // ★ 初回
+  bindChecks();
+
+  // ★ 検索で rows が差し替わった後に呼ばせる用
+  window.rebindBulkChecks = bindChecks;
+})();
 </script>
+
 
 <script>
   (function(){
@@ -289,6 +303,15 @@
       const html = await res.text();
       if(token !== lastToken) return; // 古いレスポンスは捨てる
       tbody.innerHTML = html;
+
+      tbody.innerHTML = html;
+      updateAddressBar(q);
+
+      // ★ これを追加
+      if (window.rebindBulkChecks) {
+        window.rebindBulkChecks();
+      }
+
       updateAddressBar(q);
       // フォーカス維持（遷移しないので基本要らないけど保険）
       input.focus({ preventScroll: true });
