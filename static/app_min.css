@@ -972,3 +972,14 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   pointer-events: none;
   filter: grayscale(.2);
 }
+
+/* EDAページ */
+.eda-conclusion {
+  margin-left: 1.2em;
+  line-height: 1.8;
+}
+
+.eda-decision {
+  margin-top: 12px;
+  font-weight: bold;
+}

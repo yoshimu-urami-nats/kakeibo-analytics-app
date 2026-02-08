@@ -102,7 +102,20 @@
 </div>
 
 <div class="card">
-  <h2 class="h2">分析に進む価値の判断</h2>
-  <p class="muted">（次）このデータで予測する価値があるか、前提が満たせるか</p>
+  <h2 class="h2">EDAからの結論</h2>
+
+  <ul class="eda-conclusion">
+    <li><strong>データ量：</strong>請求月あたり十分な件数があり、分析可能</li>
+    <li><strong>期間の一貫性：</strong>CSV（請求月）単位で管理されている</li>
+    <li><strong>欠損・未確定：</strong>未確定率は全期間で 0%</li>
+    <li><strong>粒度：</strong>予測単位は「請求月」が妥当</li>
+    <li><strong>注意点：</strong>一時的な高額支出によるブレあり</li>
+  </ul>
+
+  <p class="eda-decision">
+    ▶ 本データは「請求月ごとの合計支出額」を
+    予測対象として分析に進む前提を満たしている
+  </p>
 </div>
+
 {% endblock %}
