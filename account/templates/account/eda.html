@@ -1,4 +1,5 @@
 {% extends "account/base.html" %}
+{% load humanize %}
 {% block title %}EDA{% endblock %}
 
 {% block content %}
@@ -6,16 +7,47 @@
 
 <div class="card">
   <h2 class="h2">データ健全性の確認</h2>
-  <p class="muted">（仮）欠損 / 異常値 / 件数推移 など</p>
+  <p class="muted">月ごとの件数・合計金額・未確定率を確認します。</p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>月</th>
+        <th class="num">件数</th>
+        <th class="num">合計金額</th>
+        <th class="num">未確定</th>
+        <th class="num">未確定率</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in monthly_stats %}
+      <tr>
+        <td>{{ r.month|date:"Y-m" }}</td>
+        <td class="num">{{ r.count|intcomma }}</td>
+        <td class="num">¥{{ r.total|intcomma }}</td>
+        <td class="num">{{ r.unclosed|intcomma }}</td>
+        <td class="num">{{ r.unclosed_rate }}%</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="muted">データがありません</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="muted" style="margin-top:10px;">
+    判定メモ：件数が極端に落ちる月／合計が桁飛びする月／未確定率が高止まりする月がないかを見る。
+  </div>
 </div>
 
 <div class="card">
   <h2 class="h2">粒度・傾向の把握</h2>
-  <p class="muted">（仮）月別 / カテゴリ別 / メンバー別</p>
+  <p class="muted">（次）月別 / カテゴリ別 / メンバー別</p>
 </div>
 
 <div class="card">
   <h2 class="h2">分析に進む価値の判断</h2>
-  <p class="muted">（仮）このデータで予測する価値があるか、前提が満たせるか</p>
+  <p class="muted">（次）このデータで予測する価値があるか、前提が満たせるか</p>
 </div>
 {% endblock %}
