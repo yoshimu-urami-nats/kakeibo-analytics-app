@@ -149,10 +149,17 @@ def transaction_list(request):
     latest_source = (
         Transaction.objects
         .exclude(source_file="")
-        .order_by("-id")
         .values_list("source_file", flat=True)
-        .first()
+        .distinct()
     )
+
+    # YYYYMM を数値化して最大を取る
+    latest_source = max(
+        latest_source,
+        key=lambda s: int(s[:6]) if s[:6].isdigit() else -1,
+        default=None,
+    )
+
 
     # 一括更新（POST）
     if request.method == "POST" and request.POST.get("bulk_action"):
@@ -438,10 +445,16 @@ def transaction_rows(request):
     latest_source = (
         Transaction.objects
         .exclude(source_file="")
-        .order_by("-id")
         .values_list("source_file", flat=True)
-        .first()
+        .distinct()
     )
+
+    latest_source = max(
+        latest_source,
+        key=lambda s: int(s[:6]) if s[:6].isdigit() else -1,
+        default=None,
+    )
+
 
     qs = Transaction.objects.select_related("category", "member")
     if latest_source:
