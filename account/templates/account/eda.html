@@ -7,12 +7,14 @@
 
 <div class="card">
   <h2 class="h2">データ健全性の確認</h2>
-  <p class="muted">月ごとの件数・合計金額・未確定率を確認します。</p>
+  <p class="muted">
+    請求月（CSVファイル単位）ごとの件数・合計金額・未確定率を確認します。
+  </p>
 
   <table class="summary-table">
     <thead>
       <tr>
-        <th>月</th>
+        <th>請求月</th>
         <th class="num">件数</th>
         <th class="num">合計金額</th>
         <th class="num">未確定</th>
@@ -20,9 +22,9 @@
       </tr>
     </thead>
     <tbody>
-      {% for r in monthly_stats %}
+      {% for r in billing_stats %}
       <tr>
-        <td>{{ r.month|date:"Y-m" }}</td>
+        <td>{{ r.billing_month }}</td>
         <td class="num">{{ r.count|intcomma }}</td>
         <td class="num">¥{{ r.total|intcomma }}</td>
         <td class="num">{{ r.unclosed|intcomma }}</td>
@@ -37,13 +39,13 @@
   </table>
 
   <div class="muted" style="margin-top:10px;">
-    判定メモ：件数が極端に落ちる月／合計が桁飛びする月／未確定率が高止まりする月がないかを見る。
+    判定メモ：件数が極端に落ちる請求月／合計が桁飛びする請求月／未確定率が高止まりする請求月がないかを見る。
   </div>
 </div>
 
 <div class="card">
   <h2 class="h2">粒度・傾向の把握</h2>
-  <p class="muted">（次）月別 / カテゴリ別 / メンバー別</p>
+  <p class="muted">（次）請求月別 / カテゴリ別 / メンバー別</p>
 </div>
 
 <div class="card">
