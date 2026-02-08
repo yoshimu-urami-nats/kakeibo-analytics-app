@@ -43,9 +43,62 @@
   </div>
 </div>
 
+<!-- 請求月 × メンバー -->
 <div class="card">
-  <h2 class="h2">粒度・傾向の把握</h2>
-  <p class="muted">（次）請求月別 / カテゴリ別 / メンバー別</p>
+  <h2 class="h2">粒度・傾向の把握：メンバー別（請求月）</h2>
+  <p class="muted">請求月（CSV単位）ごとのメンバー別合計。</p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>請求月</th>
+        {% for c in member_cols %}
+          <th class="num">{{ c }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in member_table %}
+      <tr>
+        <td>{{ r.billing_month }}</td>
+        {% for cell in r.cells %}
+          <td class="num">¥{{ cell.total|intcomma }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 追加：請求月 × カテゴリ（上位） -->
+<div class="card">
+  <h2 class="h2">粒度・傾向の把握：カテゴリ上位（請求月）</h2>
+  <p class="muted">全期間で金額が大きいカテゴリ上位のみを表示。</p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>請求月</th>
+        {% for c in cat_cols %}
+          <th class="num">{{ c }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in category_table %}
+      <tr>
+        <td>{{ r.billing_month }}</td>
+        {% for cell in r.cells %}
+          <td class="num">¥{{ cell.total|intcomma }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="muted" style="margin-top:10px;">
+    ※カテゴリが多いと見づらいので、上位のみ（{{ cat_cols|length }}件）に絞ってる。
+  </div>
 </div>
 
 <div class="card">
