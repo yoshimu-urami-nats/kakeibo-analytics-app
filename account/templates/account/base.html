@@ -44,6 +44,11 @@
           EDA
         </a>
 
+        <a href="{% url 'zones' %}"
+          class="{% if request.resolver_match.view_name == 'zones' %}active{% endif %}">
+          Zones
+        </a>
+
         <a href="{% url 'prediction' %}"
           class="{% if request.resolver_match.view_name == 'prediction' %}active{% endif %}">
           Prediction

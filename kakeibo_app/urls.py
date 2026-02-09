@@ -42,5 +42,6 @@ urlpatterns = [
     path('import/', views.csv_import, name='csv_import'),
     path('eda/', views.eda, name='eda'),
     path('prediction/', views.prediction, name='prediction'),
+    path('zones/', views.zones, name='zones'),
 ]
 
