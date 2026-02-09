@@ -1,4 +1,5 @@
 {% extends "account/base.html" %}
+{% load humanize %}
 {% block title %}Prediction{% endblock %}
 
 {% block content %}
@@ -6,16 +7,57 @@
 
 <div class="card">
   <h2 class="h2">前提条件</h2>
-  <p class="muted">（仮）対象期間、除外ルール、特徴量など</p>
+  <ul class="muted">
+    <li>予測単位：請求月（CSV単位）</li>
+    <li>予測対象：請求月ごとの合計支出（カテゴリ除外後）</li>
+    <li>除外カテゴリ（暫定）：{{ exclude_keywords|join:", " }}</li>
+  </ul>
 </div>
 
 <div class="card">
-  <h2 class="h2">予測結果</h2>
-  <p class="muted">（仮）翌月支出の予測、カテゴリ別見込みなど</p>
+  <h2 class="h2">入力データ（請求月 × 合計支出）</h2>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>請求月</th>
+        <th class="num">合計（除外後）</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in series %}
+      <tr>
+        <td>{{ r.billing_month }}</td>
+        <td class="num">¥{{ r.total|intcomma }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="2" class="muted">データがありません</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h2 class="h2">予測結果（線形回帰）</h2>
+
+  {% if pred_next %}
+    <p>
+      来月（{{ next_month }}）の予測：<b>¥{{ pred_next|intcomma }}</b>
+    </p>
+    <p class="muted">
+      傾向（目安）：1請求月あたり <b>{{ slope|floatformat:0 }}</b> 円くらい増減
+    </p>
+  {% else %}
+    <p class="muted">データが2か月分以上ないので、まだ回帰できません。</p>
+  {% endif %}
 </div>
 
 <div class="card">
   <h2 class="h2">解釈と限界</h2>
-  <p class="muted">（仮）当たり外れより、どう使うか／注意点</p>
+  <p class="muted">
+    これは「家具・家電のような突発支出」を除外したうえで、
+    過去の推移を一本の直線で近似した“目安”です。
+    一時的なイベント支出が起きた月は誤差が出ます。
+  </p>
 </div>
 {% endblock %}
