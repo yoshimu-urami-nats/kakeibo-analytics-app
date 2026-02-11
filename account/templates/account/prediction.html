@@ -14,6 +14,12 @@
   </ul>
 
   <h2 class="h2" style="margin-top:14px;">設定</h2>
+
+  <p class="muted">
+    ・除外カテゴリ：予測から除外したい支出カテゴリをカンマ区切りで指定できます。<br>
+    ・学習開始月数：最低何ヶ月分のデータを使ってから予測を開始するかを指定します。
+  </p>
+  
   <form method="get" class="table-toolbar" style="grid-template-columns: 1fr 180px auto; gap:10px;">
     <input class="input" type="text" name="exclude" placeholder="除外カテゴリ（カンマ区切り）"
            value="{{ exclude_param|default:'' }}">
