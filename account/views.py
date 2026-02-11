@@ -238,7 +238,7 @@ def prediction(request):
     month_totals: dict[str, int] = {}
     for r in rows:
         sf = r["source_file"] or ""
-        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMM（取れないとsfが返る）
+        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMM
         if not mo:
             continue
         month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
@@ -257,7 +257,7 @@ def prediction(request):
             "total": int(month_totals[mo] or 0),
         })
 
-    # --- ④ “全期間で一本”の予測（いま表示してるやつ） ---
+    # --- ④ “全期間で一本”の予測（今まで表示してたやつ） ---
     slope = intercept = pred_next = None
     next_month = ""
 
@@ -271,7 +271,7 @@ def prediction(request):
             next_month = _yyyymm_add1(series[-1]["billing_month"])
 
     # --- ⑤ バックテスト（walk-forward）
-    # 例：最初は3か月貯まったら予測開始 → 4か月目を予測 → 実績と比較 → 次…
+    # 最初は3か月貯まったら予測開始 → 4か月目を予測 → 実績と比較 → 次…
     min_train = 3
 
     backtests = []
@@ -315,7 +315,6 @@ def prediction(request):
                 "ape": ape,  # %
             })
 
-    # 指標（採用側が見る最低ライン）
     metrics = {
         "n": len(backtests),
         "mae": None,
@@ -337,7 +336,7 @@ def prediction(request):
         "pred_next": pred_next,
         "next_month": next_month,
 
-        # ★追加：バックテスト結果
+        # ★バックテスト表示用
         "backtests": backtests,
         "metrics": metrics,
         "min_train": min_train,
