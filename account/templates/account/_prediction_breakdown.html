@@ -56,3 +56,84 @@
     </tbody>
   </table>
 </div>
+
+{# ===== 追加：学習期間内訳 ===== #}
+{% if not not_found %}
+  <h3 class="h2" style="margin-top:18px;">学習期間内訳（{{ train_months|length }}ヶ月）</h3>
+
+  {% if train_months and train_months|length > 0 %}
+    <p class="muted" style="margin-top:6px;">
+      対象月（{{ yyyymm }}）を予測するために使われる「過去月（{{ train_months.0 }}〜{{ train_months|last }}）」の合計です。
+    </p>
+
+    <div class="muted" style="margin-top:8px;">
+      学習期間合計（除外後）：<b>¥{{ train_total_all|intcomma }}</b>
+    </div>
+
+    <h3 class="h2" style="margin-top:12px;">学習期間：月ごとの合計（除外後）</h3>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>請求月</th>
+          <th class="num">合計</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in train_month_totals %}
+        <tr>
+          <td>{{ r.month }}</td>
+          <td class="num">¥{{ r.total|intcomma }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="h2" style="margin-top:12px;">学習期間：カテゴリ内訳（合計が大きい順）</h3>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>カテゴリ</th>
+          <th class="num">合計</th>
+          <th class="num">件数</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in train_cat_rows %}
+        <tr>
+          <td>{{ r.category__name }}</td>
+          <td class="num">¥{{ r.total|intcomma }}</td>
+          <td class="num">{{ r.count|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="muted">データがありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="h2" style="margin-top:12px;">学習期間：上位の店（合計が大きい順）</h3>
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>店名</th>
+          <th class="num">合計</th>
+          <th class="num">件数</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in train_shop_rows %}
+        <tr>
+          <td>{{ r.shop }}</td>
+          <td class="num">¥{{ r.total|intcomma }}</td>
+          <td class="num">{{ r.count|intcomma }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="muted">データがありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted" style="margin-top:6px;">
+      学習期間がありません（この月が最初の月っぽい）。
+    </p>
+  {% endif %}
+{% endif %}

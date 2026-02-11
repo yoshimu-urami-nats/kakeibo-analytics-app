@@ -533,6 +533,8 @@ def prediction_breakdown(request, yyyymm: str):
     """
     Predictionページの「ズレ月クリック」用：
     指定した請求月(YYYYMM)のカテゴリ内訳（除外カテゴリ適用後）をHTML断片で返す
+
+    ★追加：その月を予測する時に使われる「学習期間（過去月）」の内訳も返す
     """
 
     # --- ① prediction() と同じく GET パラメータを解釈 ---
@@ -540,48 +542,157 @@ def prediction_breakdown(request, yyyymm: str):
     if exclude_param:
         exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
     else:
-        exclude_keywords = ["家具・家電,交際"]  # デフォルト（prediction() と同じ）
+        # prediction() 側のデフォルトに合わせる（ここは好みでOK）
+        exclude_keywords = ["家具・家電"]
 
+    # 除外Q（部分一致）
     exclude_q = Q()
     for kw in exclude_keywords:
         exclude_q |= Q(category__name__icontains=kw)
 
-    # --- ② 対象月のデータを取得（同月に複数CSVがあってもOK） ---
-    # 例: source_file が "202602.csv" なら startswith("202602") で拾える
-    base_qs = (
+    # --- ② まず「Predictionで使ってる月次系列」を同条件で作る（重要） ---
+    # 同月に複数CSVがあっても足し込む（prediction() と同じ方針）
+    base_for_series = (
         Transaction.objects
         .exclude(source_file="")
         .exclude(category__isnull=True)
         .exclude(exclude_q)
-        .filter(source_file__startswith=yyyymm)
     )
 
-    # --- ③ カテゴリ内訳（合計 / 件数） ---
+    rows = (
+        base_for_series
+        .values("source_file")
+        .annotate(total_amount=Sum("amount"))
+    )
+
+    month_totals: dict[str, int] = {}
+    for r in rows:
+        sf = r["source_file"] or ""
+        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMMに寄せる
+        if not mo:
+            continue
+        month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
+
+    months_sorted = sorted(
+        month_totals.keys(),
+        key=lambda m: int(m) if (m and m.isdigit()) else -1
+    )
+
+    # 対象月が series に存在するか確認
+    if yyyymm not in months_sorted:
+        html = render_to_string(
+            "account/_prediction_breakdown.html",
+            {
+                "yyyymm": yyyymm,
+                "exclude_keywords": exclude_keywords,
+                "total_all": 0,
+                "cat_rows": [],
+                "shop_rows": [],
+                # 学習期間側（空）
+                "train_months": [],
+                "train_total_all": 0,
+                "train_cat_rows": [],
+                "train_shop_rows": [],
+                "train_month_totals": [],
+                "not_found": True,
+            },
+            request=request
+        )
+        return HttpResponse(html)
+
+    # クリックされた月＝テスト月、その前が学習期間（walk-forward想定）
+    target_idx = months_sorted.index(yyyymm)
+    train_months = months_sorted[:target_idx]  # その月より前を全部
+
+    # --- ③ 対象月（テスト月）の内訳 ---
+    target_qs = (
+        Transaction.objects
+        .exclude(source_file="")
+        .exclude(category__isnull=True)
+        .exclude(exclude_q)
+        .filter(source_file__startswith=yyyymm)  # 同月ファイル全部拾う
+    )
+
     cat_rows = (
-        base_qs
+        target_qs
         .values("category__name")
         .annotate(total=Sum("amount"), count=Count("id"))
         .order_by("-total")
     )
 
-    # （おまけ）上位店名も少し出す：原因特定に便利
     shop_rows = (
-        base_qs
+        target_qs
         .values("shop")
         .annotate(total=Sum("amount"), count=Count("id"))
         .order_by("-total")[:8]
     )
 
-    total_all = int(base_qs.aggregate(s=Sum("amount"))["s"] or 0)
+    total_all = int(target_qs.aggregate(s=Sum("amount"))["s"] or 0)
 
+    # --- ④ 学習期間（過去月）の内訳（★追加） ---
+    train_cat_rows = []
+    train_shop_rows = []
+    train_total_all = 0
+    train_month_totals = []
+
+    if train_months:
+        # 学習期間に該当する source_file を拾う（startswith で "YYYYMM" をまとめて拾う）
+        # OR が多くなりすぎるのを避けたいなら、件数が増えた時に別アプローチにする
+        train_q = Q()
+        for mo in train_months:
+            train_q |= Q(source_file__startswith=mo)
+
+        train_qs = (
+            Transaction.objects
+            .exclude(source_file="")
+            .exclude(category__isnull=True)
+            .exclude(exclude_q)
+            .filter(train_q)
+        )
+
+        train_total_all = int(train_qs.aggregate(s=Sum("amount"))["s"] or 0)
+
+        train_cat_rows = (
+            train_qs
+            .values("category__name")
+            .annotate(total=Sum("amount"), count=Count("id"))
+            .order_by("-total")
+        )
+
+        train_shop_rows = (
+            train_qs
+            .values("shop")
+            .annotate(total=Sum("amount"), count=Count("id"))
+            .order_by("-total")[:8]
+        )
+
+        # 学習期間：月ごとの合計（seriesと同じ値を並べる）
+        for mo in train_months:
+            train_month_totals.append({
+                "month": mo,
+                "total": int(month_totals.get(mo, 0)),
+            })
+
+    # --- ⑤ render ---
     html = render_to_string(
         "account/_prediction_breakdown.html",
         {
             "yyyymm": yyyymm,
             "exclude_keywords": exclude_keywords,
+
+            # 対象月（テスト月）
             "total_all": total_all,
             "cat_rows": cat_rows,
             "shop_rows": shop_rows,
+
+            # 学習期間（過去月）
+            "train_months": train_months,
+            "train_total_all": train_total_all,
+            "train_cat_rows": train_cat_rows,
+            "train_shop_rows": train_shop_rows,
+            "train_month_totals": train_month_totals,
+
+            "not_found": False,
         },
         request=request
     )
