@@ -214,199 +214,219 @@ def eda(request):
 
 @login_required
 def prediction(request):
-    # --- 追加：GETで調整できるようにする ---
-    # ?min_train=6 みたいに変えられる
+    # -----------------------------
+    # 0) GET params
+    # -----------------------------
     try:
         min_train = int(request.GET.get("min_train", "3"))
     except ValueError:
         min_train = 3
-    min_train = max(2, min_train)  # 最低2
+    min_train = max(2, min_train)
 
-    # ?exclude=家具,家電,税金 みたいに渡せる（空ならデフォルト）
     exclude_param = (request.GET.get("exclude") or "").strip()
     if exclude_param:
-        exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
+        base_exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
     else:
-        exclude_keywords = ["家具", "家電"]
+        base_exclude_keywords = ["家具・家電"]
 
-    exclude_q = Q()
-    for kw in exclude_keywords:
-        exclude_q |= Q(category__name__icontains=kw)
+    # -----------------------------
+    # 1) 共通：計算ロジックを関数化
+    # -----------------------------
+    def _run_prediction(exclude_keywords: list[str], min_train: int):
+        # 除外Q
+        exclude_q = Q()
+        for kw in exclude_keywords:
+            exclude_q |= Q(category__name__icontains=kw)
 
-    # --- ① 対象データ（カテゴリNULLは除外、除外カテゴリも除外） ---
-    base = (
-        Transaction.objects
-        .exclude(source_file="")
-        .exclude(category__isnull=True)
-        .exclude(exclude_q)
-    )
+        # 対象データ
+        base = (
+            Transaction.objects
+            .exclude(source_file="")
+            .exclude(category__isnull=True)
+            .exclude(exclude_q)
+        )
 
-    # source_fileごとの合計（DB側でまず集計）
-    rows = (
-        base
-        .values("source_file")
-        .annotate(total_amount=Sum("amount"))
-    )
+        # source_file ごとの合計
+        rows = (
+            base
+            .values("source_file")
+            .annotate(total_amount=Sum("amount"))
+        )
 
-    # --- ② 「YYYYMM（月）」でまとめ直す（同月に複数source_fileがあっても足し込む） ---
-    month_totals: dict[str, int] = {}
-    for r in rows:
-        sf = r["source_file"] or ""
-        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMM
-        if not mo:
-            continue
-        month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
-
-    months_sorted = sorted(
-        month_totals.keys(),
-        key=lambda m: int(m) if (m and m.isdigit()) else -1
-    )
-
-    # --- ③ 時系列（index付き）に整形 ---
-    series = []
-    for i, mo in enumerate(months_sorted):
-        series.append({
-            "i": i,
-            "billing_month": mo,
-            "total": int(month_totals[mo] or 0),
-        })
-
-    # --- ④ “全期間で一本”の予測（今まで表示してたやつ） ---
-    slope = intercept = pred_next = None
-    next_month = ""
-
-    if len(series) >= 2:
-        points = [(d["i"], d["total"]) for d in series]
-        slope, intercept = _linear_regression(points)
-
-        if slope is not None:
-            next_i = series[-1]["i"] + 1
-            pred_next = int(round(slope * next_i + intercept))
-            next_month = _yyyymm_add1(series[-1]["billing_month"])
-
-    # --- ⑤ バックテスト（walk-forward）
-    # 最初は3か月貯まったら予測開始 → 4か月目を予測 → 実績と比較 → 次…
-    min_train = 3
-
-    backtests = []
-    errors_abs = []
-    errors_sq = []
-    errors_pct = []
-
-    # --- ベースライン（ナイーブ）用 ---
-    naive_abs = []
-    naive_sq = []
-    naive_pct = []
-
-    if len(series) >= (min_train + 1):
-        for t in range(min_train, len(series)):
-            train = series[:t]
-            test = series[t]
-
-            pts = [(d["i"], d["total"]) for d in train]
-            s, b = _linear_regression(pts)
-            if s is None:
+        # YYYYMM（月）へ寄せて集計（同月に複数CSVがあっても足し込む）
+        month_totals: dict[str, int] = {}
+        for r in rows:
+            sf = r["source_file"] or ""
+            mo = _yyyymm_label(sf)  # "202602"
+            if not mo:
                 continue
+            month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
 
-            pred = int(round(s * test["i"] + b))
-            actual = int(test["total"])
+        months_sorted = sorted(
+            month_totals.keys(),
+            key=lambda m: int(m) if (m and m.isdigit()) else -1
+        )
 
-            # ★ベースライン：直前月の実績をそのまま予測とみなす
-            naive_pred = int(train[-1]["total"]) if train else 0
-
-            # 誤差
-            err = pred - actual
-            ae = abs(err)
-            se = err * err
-
-            # ベースライン誤差
-            n_err = naive_pred - actual
-            n_ae = abs(n_err)
-            n_se = n_err * n_err
-
-            ape = None
-            n_ape = None
-            if actual != 0:
-                ape = abs(err) / abs(actual) * 100.0
-                errors_pct.append(ape)
-
-                n_ape = abs(n_err) / abs(actual) * 100.0
-                naive_pct.append(n_ape)
-
-            errors_abs.append(ae)
-            errors_sq.append(se)
-
-            naive_abs.append(n_ae)
-            naive_sq.append(n_se)
-
-            backtests.append({
-                "month": test["billing_month"],
-                "train_months": len(train),
-                "pred": pred,
-                "actual": actual,
-                "error": err,
-                "abs_error": ae,
-                "ape": ape,  # %
-
-                # ★ベースライン
-                "naive_pred": naive_pred,
-                "naive_error": n_err,
-                "naive_abs_error": n_ae,
-                "naive_ape": n_ape,
+        series = []
+        for i, mo in enumerate(months_sorted):
+            series.append({
+                "i": i,
+                "billing_month": mo,
+                "total": int(month_totals[mo] or 0),
             })
 
-    metrics = {
-        "n": len(backtests),
-        "mae": None,
-        "rmse": None,
-        "mape": None,
+        # 予測（全期間1本）
+        slope = intercept = pred_next = None
+        next_month = ""
+        if len(series) >= 2:
+            points = [(d["i"], d["total"]) for d in series]
+            slope, intercept = _linear_regression(points)
+            if slope is not None:
+                next_i = series[-1]["i"] + 1
+                pred_next = int(round(slope * next_i + intercept))
+                next_month = _yyyymm_add1(series[-1]["billing_month"])
 
-        # ベースライン
-        "naive_mae": None,
-        "naive_rmse": None,
-        "naive_mape": None,
+        # バックテスト（walk-forward）
+        backtests = []
+        errors_abs = []
+        errors_sq = []
+        errors_pct = []
 
-        # 改善率（MAEでどれだけ良いか）
-        "mae_improve_pct": None,
-    }
+        naive_abs = []
+        naive_sq = []
+        naive_pct = []
 
-    worst_months = []
+        if len(series) >= (min_train + 1):
+            for t in range(min_train, len(series)):
+                train = series[:t]
+                test = series[t]
 
-    if backtests:
-        metrics["mae"] = int(round(sum(errors_abs) / len(errors_abs)))
-        metrics["rmse"] = int(round((sum(errors_sq) / len(errors_sq)) ** 0.5))
-        metrics["mape"] = round(sum(errors_pct) / len(errors_pct), 1) if errors_pct else None
+                pts = [(d["i"], d["total"]) for d in train]
+                s, b = _linear_regression(pts)
+                if s is None:
+                    continue
 
-        metrics["naive_mae"] = int(round(sum(naive_abs) / len(naive_abs)))
-        metrics["naive_rmse"] = int(round((sum(naive_sq) / len(naive_sq)) ** 0.5))
-        metrics["naive_mape"] = round(sum(naive_pct) / len(naive_pct), 1) if naive_pct else None
+                pred = int(round(s * test["i"] + b))
+                actual = int(test["total"])
 
-        if metrics["naive_mae"] and metrics["naive_mae"] != 0:
-            metrics["mae_improve_pct"] = round(
-                (metrics["naive_mae"] - metrics["mae"]) / metrics["naive_mae"] * 100.0, 1
-            )
+                # ベースライン：直前月
+                naive_pred = int(train[-1]["total"]) if train else 0
 
-        # ★ズレが大きい月（%誤差が取れるやつだけ）上位3
-        worst_months = sorted(
-            [r for r in backtests if r["ape"] is not None],
-            key=lambda r: r["ape"],
-            reverse=True
-        )[:3]
+                err = pred - actual
+                ae = abs(err)
+                se = err * err
 
+                n_err = naive_pred - actual
+                n_ae = abs(n_err)
+                n_se = n_err * n_err
+
+                ape = None
+                n_ape = None
+                if actual != 0:
+                    ape = abs(err) / abs(actual) * 100.0
+                    errors_pct.append(ape)
+
+                    n_ape = abs(n_err) / abs(actual) * 100.0
+                    naive_pct.append(n_ape)
+
+                errors_abs.append(ae)
+                errors_sq.append(se)
+
+                naive_abs.append(n_ae)
+                naive_sq.append(n_se)
+
+                backtests.append({
+                    "month": test["billing_month"],
+                    "train_months": len(train),
+                    "pred": pred,
+                    "actual": actual,
+                    "error": err,
+                    "abs_error": ae,
+                    "ape": ape,
+
+                    "naive_pred": naive_pred,
+                    "naive_error": n_err,
+                    "naive_abs_error": n_ae,
+                    "naive_ape": n_ape,
+                })
+
+        metrics = {
+            "n": len(backtests),
+            "mae": None,
+            "rmse": None,
+            "mape": None,
+            "naive_mae": None,
+            "naive_rmse": None,
+            "naive_mape": None,
+            "mae_improve_pct": None,
+        }
+
+        worst_months = []
+        if backtests:
+            metrics["mae"] = int(round(sum(errors_abs) / len(errors_abs)))
+            metrics["rmse"] = int(round((sum(errors_sq) / len(errors_sq)) ** 0.5))
+            metrics["mape"] = round(sum(errors_pct) / len(errors_pct), 1) if errors_pct else None
+
+            metrics["naive_mae"] = int(round(sum(naive_abs) / len(naive_abs)))
+            metrics["naive_rmse"] = int(round((sum(naive_sq) / len(naive_sq)) ** 0.5))
+            metrics["naive_mape"] = round(sum(naive_pct) / len(naive_pct), 1) if naive_pct else None
+
+            if metrics["naive_mae"] and metrics["naive_mae"] != 0:
+                metrics["mae_improve_pct"] = round(
+                    (metrics["naive_mae"] - metrics["mae"]) / metrics["naive_mae"] * 100.0, 1
+                )
+
+            worst_months = sorted(
+                [r for r in backtests if r["ape"] is not None],
+                key=lambda r: r["ape"],
+                reverse=True
+            )[:3]
+
+        return {
+            "exclude_keywords": exclude_keywords,
+            "series": series,
+            "slope": slope,
+            "intercept": intercept,
+            "pred_next": pred_next,
+            "next_month": next_month,
+            "backtests": backtests,
+            "metrics": metrics,
+            "worst_months": worst_months,
+        }
+
+    # -----------------------------
+    # 2) 比較：交際「含む」vs「除外」
+    # -----------------------------
+    result_include = _run_prediction(base_exclude_keywords, min_train)
+
+    # 「交際」を除外に足した版（すでに入ってたら二重にしない）
+    exclude_plus_social = list(base_exclude_keywords)
+    if not any("交際" in x for x in exclude_plus_social):
+        exclude_plus_social.append("交際")
+    result_exclude = _run_prediction(exclude_plus_social, min_train)
+
+    # -----------------------------
+    # 3) 画面表示用：メイン表示は「含む」側を従来通り出す
+    # -----------------------------
     return render(request, "account/prediction.html", {
-        "exclude_keywords": exclude_keywords,
-        "exclude_param": ",".join(exclude_keywords),  # ★入力欄に戻す用
-        "series": series,
+        # 入力欄用
+        "exclude_keywords": base_exclude_keywords,
+        "exclude_param": ",".join(base_exclude_keywords),
+        "min_train": min_train,
 
-        "slope": slope,
-        "intercept": intercept,
-        "pred_next": pred_next,
-        "next_month": next_month,
+        # 従来表示（交際“含む”）
+        "series": result_include["series"],
+        "slope": result_include["slope"],
+        "intercept": result_include["intercept"],
+        "pred_next": result_include["pred_next"],
+        "next_month": result_include["next_month"],
+        "backtests": result_include["backtests"],
+        "metrics": result_include["metrics"],
+        "worst_months": result_include["worst_months"],
 
-        "backtests": backtests,
-        "metrics": metrics,
-        "min_train": min_train,          # ★固定じゃなくなる
-        "worst_months": worst_months,    # ★追加
+        # 追加：比較用（2本）
+        "compare_include": result_include,
+        "compare_exclude": result_exclude,
     })
 
 
@@ -520,7 +540,7 @@ def prediction_breakdown(request, yyyymm: str):
     if exclude_param:
         exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
     else:
-        exclude_keywords = ["家具", "家電"]  # デフォルト（prediction() と同じ）
+        exclude_keywords = ["家具・家電,交際"]  # デフォルト（prediction() と同じ）
 
     exclude_q = Q()
     for kw in exclude_keywords:

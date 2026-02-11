@@ -36,6 +36,55 @@
 
 </div>
 
+{# ===== 追加：交際 含む/除外 の精度比較 ===== #}
+<div class="card">
+  <h2 class="h2">精度比較：交際を含む / 除外</h2>
+  <p class="muted">
+    同じ min_train・同じルールで、「交際」だけを除外した場合の精度を並べて比較します。
+    ※“誤差ドーン月”に交際が直接入っているとは限らないので、ここは「モデル全体の誤差が改善するか」を見る用途。
+  </p>
+
+  <table class="summary-table" style="margin-top:10px;">
+    <thead>
+      <tr>
+        <th></th>
+        <th class="num">検証回数</th>
+        <th class="num">MAE</th>
+        <th class="num">RMSE</th>
+        <th class="num">MAPE</th>
+        <th class="num">ベースラインMAE</th>
+        <th class="num">改善率(MAE)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>交際を含む（現状）</td>
+        <td class="num">{{ compare_include.metrics.n }}</td>
+        <td class="num">{% if compare_include.metrics.mae %}¥{{ compare_include.metrics.mae|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_include.metrics.rmse %}¥{{ compare_include.metrics.rmse|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_include.metrics.mape != None %}{{ compare_include.metrics.mape }}%{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_include.metrics.naive_mae %}¥{{ compare_include.metrics.naive_mae|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_include.metrics.mae_improve_pct != None %}{{ compare_include.metrics.mae_improve_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+
+      <tr>
+        <td>交際を除外（exclude に交際追加）</td>
+        <td class="num">{{ compare_exclude.metrics.n }}</td>
+        <td class="num">{% if compare_exclude.metrics.mae %}¥{{ compare_exclude.metrics.mae|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_exclude.metrics.rmse %}¥{{ compare_exclude.metrics.rmse|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_exclude.metrics.mape != None %}{{ compare_exclude.metrics.mape }}%{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_exclude.metrics.naive_mae %}¥{{ compare_exclude.metrics.naive_mae|intcomma }}{% else %}—{% endif %}</td>
+        <td class="num">{% if compare_exclude.metrics.mae_improve_pct != None %}{{ compare_exclude.metrics.mae_improve_pct }}%{% else %}—{% endif %}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="muted" style="margin-top:10px;">
+    現在の除外（交際を含む側）：<b>{{ compare_include.exclude_keywords|join:", " }}</b><br>
+    交際を除外した側：<b>{{ compare_exclude.exclude_keywords|join:", " }}</b>
+  </div>
+</div>
+
 <div class="card">
   <h2 class="h2">入力データ（請求月 × 合計支出）</h2>
 
