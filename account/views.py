@@ -213,41 +213,51 @@ def eda(request):
 @login_required
 def prediction(request):
     # --- 除外カテゴリ（まずは“名前に含まれる語”で除外） ---
-    # 実データのカテゴリ名に合わせて、後で増減OK
     exclude_keywords = ["家具", "家電"]
 
     exclude_q = Q()
     for kw in exclude_keywords:
         exclude_q |= Q(category__name__icontains=kw)
 
-    # --- ① 請求月（source_file）単位で合計を作る ---
+    # --- ① 対象データ（カテゴリNULLは除外、除外カテゴリも除外） ---
     base = (
         Transaction.objects
         .exclude(source_file="")
-        .exclude(category__isnull=True)  # NULLカテゴリは一旦除外（必要なら外してもOK）
-        .exclude(exclude_q)              # 家具・家電を除外
+        .exclude(category__isnull=True)
+        .exclude(exclude_q)
     )
 
+    # source_fileごとの合計（DB側でまず集計）
     rows = (
         base
         .values("source_file")
         .annotate(total_amount=Sum("amount"))
     )
 
-    # --- ② 月順にソートして、時系列（index付き）に整形 ---
-    rows_sorted = sorted(list(rows), key=lambda r: _yyyymm_key(r["source_file"]))
+    # --- ② 「YYYYMM（月）」でまとめ直す（同月に複数source_fileがあっても足し込む） ---
+    month_totals: dict[str, int] = {}
+    for r in rows:
+        sf = r["source_file"] or ""
+        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMM（取れないとsfが返る）
+        if not mo:
+            continue
+        month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
 
+    months_sorted = sorted(
+        month_totals.keys(),
+        key=lambda m: int(m) if (m and m.isdigit()) else -1
+    )
+
+    # --- ③ 時系列（index付き）に整形 ---
     series = []
-    for i, r in enumerate(rows_sorted):
-        label = _yyyymm_label(r["source_file"])
-        total = int(r["total_amount"] or 0)
+    for i, mo in enumerate(months_sorted):
         series.append({
-            "i": i,             # 回帰用のx
-            "billing_month": label,
-            "total": total,
+            "i": i,
+            "billing_month": mo,
+            "total": int(month_totals[mo] or 0),
         })
 
-    # --- ③ 線形回帰（最初は“全期間”で一本） ---
+    # --- ④ “全期間で一本”の予測（いま表示してるやつ） ---
     slope = intercept = pred_next = None
     next_month = ""
 
@@ -258,19 +268,81 @@ def prediction(request):
         if slope is not None:
             next_i = series[-1]["i"] + 1
             pred_next = int(round(slope * next_i + intercept))
-
-            # 表示用の「来月YYYYMM」も作る
             next_month = _yyyymm_add1(series[-1]["billing_month"])
 
-    # --- render ---
+    # --- ⑤ バックテスト（walk-forward）
+    # 例：最初は3か月貯まったら予測開始 → 4か月目を予測 → 実績と比較 → 次…
+    min_train = 3
+
+    backtests = []
+    errors_abs = []
+    errors_sq = []
+    errors_pct = []
+
+    if len(series) >= (min_train + 1):
+        for t in range(min_train, len(series)):
+            train = series[:t]
+            test = series[t]
+
+            pts = [(d["i"], d["total"]) for d in train]
+            s, b = _linear_regression(pts)
+            if s is None:
+                continue
+
+            pred = int(round(s * test["i"] + b))
+            actual = int(test["total"])
+
+            err = pred - actual
+            ae = abs(err)
+            se = err * err
+
+            # MAPE用（0割回避）
+            ape = None
+            if actual != 0:
+                ape = abs(err) / abs(actual) * 100.0
+                errors_pct.append(ape)
+
+            errors_abs.append(ae)
+            errors_sq.append(se)
+
+            backtests.append({
+                "month": test["billing_month"],
+                "train_months": len(train),
+                "pred": pred,
+                "actual": actual,
+                "error": err,
+                "abs_error": ae,
+                "ape": ape,  # %
+            })
+
+    # 指標（採用側が見る最低ライン）
+    metrics = {
+        "n": len(backtests),
+        "mae": None,
+        "rmse": None,
+        "mape": None,
+    }
+
+    if backtests:
+        metrics["mae"] = int(round(sum(errors_abs) / len(errors_abs)))
+        metrics["rmse"] = int(round((sum(errors_sq) / len(errors_sq)) ** 0.5))
+        metrics["mape"] = round(sum(errors_pct) / len(errors_pct), 1) if errors_pct else None
+
     return render(request, "account/prediction.html", {
         "exclude_keywords": exclude_keywords,
-        "series": series,                 # 時系列テーブル用
-        "slope": slope,                   # 増減傾向（円/月）
+        "series": series,
+
+        "slope": slope,
         "intercept": intercept,
-        "pred_next": pred_next,           # 来月予測（円）
-        "next_month": next_month,         # 表示用ラベル
+        "pred_next": pred_next,
+        "next_month": next_month,
+
+        # ★追加：バックテスト結果
+        "backtests": backtests,
+        "metrics": metrics,
+        "min_train": min_train,
     })
+
 
 @login_required
 def zones(request):

@@ -53,6 +53,68 @@
 </div>
 
 <div class="card">
+  <h2 class="h2">バックテスト（過去データで精度チェック）</h2>
+
+  {% if metrics.n and metrics.n > 0 %}
+    <p class="muted">
+      検証方法：過去{{ min_train }}か月以上たまった時点から、毎月「その時点までのデータ」で翌月（当月）を予測し、実績と比較。
+    </p>
+
+    <ul class="muted">
+      <li>検証回数：<b>{{ metrics.n }}</b></li>
+      <li>MAE（平均絶対誤差）：<b>¥{{ metrics.mae|intcomma }}</b></li>
+      <li>RMSE（誤差の大きい月に厳しい）：<b>¥{{ metrics.rmse|intcomma }}</b></li>
+      {% if metrics.mape %}
+        <li>MAPE（平均%誤差）：<b>{{ metrics.mape }}%</b></li>
+      {% endif %}
+    </ul>
+
+    <table class="summary-table" style="margin-top:10px;">
+      <thead>
+        <tr>
+          <th>対象月</th>
+          <th class="num">学習月数</th>
+          <th class="num">予測</th>
+          <th class="num">実績</th>
+          <th class="num">誤差(予測-実績)</th>
+          <th class="num">絶対誤差</th>
+          <th class="num">%誤差</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in backtests %}
+        <tr>
+          <td>{{ r.month }}</td>
+          <td class="num">{{ r.train_months }}</td>
+          <td class="num">¥{{ r.pred|intcomma }}</td>
+          <td class="num">¥{{ r.actual|intcomma }}</td>
+          <td class="num">{% if r.error >= 0 %}+{% endif %}¥{{ r.error|intcomma }}</td>
+          <td class="num">¥{{ r.abs_error|intcomma }}</td>
+          <td class="num">
+            {% if r.ape != None %}
+              {{ r.ape|floatformat:1 }}%
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="muted" style="margin-top:10px;">
+      ※精度が悪い月がある場合、「一時的イベント支出（旅行/家具/家電/医療/税金等）」が原因かを疑い、
+      その月の扱い（除外/別カテゴリ化/特徴量追加）を検討。
+    </p>
+
+  {% else %}
+    <p class="muted">
+      バックテストするにはデータが足りません（最低 {{ min_train|add:"1" }} か月分必要）。
+    </p>
+  {% endif %}
+</div>
+
+<div class="card">
   <h2 class="h2">解釈と限界</h2>
   <p class="muted">
     これは「家具・家電のような突発支出」を除外したうえで、
