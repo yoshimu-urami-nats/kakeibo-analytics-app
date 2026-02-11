@@ -6,6 +6,8 @@ from django.db.models import Count, Sum, Q, F
 from transactions.models import Transaction
 from datetime import datetime
 from statistics import median
+from django.http import HttpResponse
+from django.template.loader import render_to_string
 
 def _yyyymm_key(s: str) -> int:
     """source_file から YYYYMM を抜いて、ソート用の数値にする"""
@@ -506,3 +508,61 @@ def zones(request):
         "contrib": contrib,
     })
 
+@login_required
+def prediction_breakdown(request, yyyymm: str):
+    """
+    Predictionページの「ズレ月クリック」用：
+    指定した請求月(YYYYMM)のカテゴリ内訳（除外カテゴリ適用後）をHTML断片で返す
+    """
+
+    # --- ① prediction() と同じく GET パラメータを解釈 ---
+    exclude_param = (request.GET.get("exclude") or "").strip()
+    if exclude_param:
+        exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
+    else:
+        exclude_keywords = ["家具", "家電"]  # デフォルト（prediction() と同じ）
+
+    exclude_q = Q()
+    for kw in exclude_keywords:
+        exclude_q |= Q(category__name__icontains=kw)
+
+    # --- ② 対象月のデータを取得（同月に複数CSVがあってもOK） ---
+    # 例: source_file が "202602.csv" なら startswith("202602") で拾える
+    base_qs = (
+        Transaction.objects
+        .exclude(source_file="")
+        .exclude(category__isnull=True)
+        .exclude(exclude_q)
+        .filter(source_file__startswith=yyyymm)
+    )
+
+    # --- ③ カテゴリ内訳（合計 / 件数） ---
+    cat_rows = (
+        base_qs
+        .values("category__name")
+        .annotate(total=Sum("amount"), count=Count("id"))
+        .order_by("-total")
+    )
+
+    # （おまけ）上位店名も少し出す：原因特定に便利
+    shop_rows = (
+        base_qs
+        .values("shop")
+        .annotate(total=Sum("amount"), count=Count("id"))
+        .order_by("-total")[:8]
+    )
+
+    total_all = int(base_qs.aggregate(s=Sum("amount"))["s"] or 0)
+
+    html = render_to_string(
+        "account/_prediction_breakdown.html",
+        {
+            "yyyymm": yyyymm,
+            "exclude_keywords": exclude_keywords,
+            "total_all": total_all,
+            "cat_rows": cat_rows,
+            "shop_rows": shop_rows,
+        },
+        request=request
+    )
+    return HttpResponse(html)

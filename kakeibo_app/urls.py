@@ -43,5 +43,7 @@ urlpatterns = [
     path('eda/', views.eda, name='eda'),
     path('prediction/', views.prediction, name='prediction'),
     path('zones/', views.zones, name='zones'),
+    path('prediction/breakdown/<str:yyyymm>/', views.prediction_breakdown, name='prediction_breakdown'),
+
 ]
 

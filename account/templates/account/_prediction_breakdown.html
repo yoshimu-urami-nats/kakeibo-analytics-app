@@ -1,0 +1,58 @@
+{% load humanize %}
+
+<div class="card" style="margin-top:12px;">
+  <div style="display:flex; justify-content:space-between; align-items:baseline; gap:12px;">
+    <h2 class="h2" style="margin:0;">内訳：{{ yyyymm }}</h2>
+    <div class="muted" style="white-space:nowrap;">
+      合計（除外後）：<b>¥{{ total_all|intcomma }}</b>
+    </div>
+  </div>
+
+  <p class="muted" style="margin-top:8px;">
+    ※この内訳は Prediction と同じ条件（除外：{{ exclude_keywords|join:", " }}）で集計しています。
+  </p>
+
+  <h3 class="h2" style="margin-top:12px;">カテゴリ内訳</h3>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>カテゴリ</th>
+        <th class="num">合計</th>
+        <th class="num">件数</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in cat_rows %}
+      <tr>
+        <td>{{ r.category__name }}</td>
+        <td class="num">¥{{ r.total|intcomma }}</td>
+        <td class="num">{{ r.count|intcomma }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="muted">データがありません</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3 class="h2" style="margin-top:12px;">上位の店（合計が大きい順）</h3>
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>店名</th>
+        <th class="num">合計</th>
+        <th class="num">件数</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in shop_rows %}
+      <tr>
+        <td>{{ r.shop }}</td>
+        <td class="num">¥{{ r.total|intcomma }}</td>
+        <td class="num">{{ r.count|intcomma }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="muted">データがありません</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

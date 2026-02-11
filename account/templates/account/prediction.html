@@ -19,7 +19,7 @@
     ・除外カテゴリ：予測から除外したい支出カテゴリをカンマ区切りで指定できます。<br>
     ・学習開始月数：最低何ヶ月分のデータを使ってから予測を開始するかを指定します。
   </p>
-  
+
   <form method="get" class="table-toolbar" style="grid-template-columns: 1fr 180px auto; gap:10px;">
     <input class="input" type="text" name="exclude" placeholder="除外カテゴリ（カンマ区切り）"
            value="{{ exclude_param|default:'' }}">
@@ -150,7 +150,7 @@
       <h2 class="h2">誤差が大きい月（要因調査候補）</h2>
       <p class="muted">ズレが大きい月は「一時イベント支出」が混ざっている可能性が高い。</p>
 
-      <table class="summary-table">
+      <table class="summary-table" id="worstMonthsTable">
         <thead>
           <tr>
             <th>対象月</th>
@@ -161,7 +161,7 @@
         </thead>
         <tbody>
           {% for r in worst_months %}
-          <tr>
+          <tr data-month="{{ r.month }}" style="cursor:pointer;">
             <td>{{ r.month }}</td>
             <td class="num">¥{{ r.actual|intcomma }}</td>
             <td class="num">¥{{ r.pred|intcomma }}</td>
@@ -170,6 +170,8 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <div id="breakdownMount"></div>
     </div>
     {% endif %}
 
@@ -195,4 +197,52 @@
     一時的なイベント支出が起きた月は誤差が出ます。
   </p>
 </div>
+
+<script>
+(function(){
+  // 「誤差が大きい月」テーブルをクリックできるようにする
+  const table = document.getElementById("worstMonthsTable");
+  const mount = document.getElementById("breakdownMount");
+  if(!table || !mount) return;
+
+  // 現在の exclude/min_train を URL から引き継ぐ（Prediction と同条件で内訳を出す）
+  const curUrl = new URL(window.location.href);
+  const exclude = curUrl.searchParams.get("exclude") || "";
+  const minTrain = curUrl.searchParams.get("min_train") || "";
+
+  function buildBreakdownUrl(yyyymm){
+    const u = new URL(`/prediction/breakdown/${yyyymm}/`, window.location.origin);
+    if(exclude) u.searchParams.set("exclude", exclude);
+    if(minTrain) u.searchParams.set("min_train", minTrain); // 使わないけど一応残し
+    return u.toString();
+  }
+
+  async function loadBreakdown(yyyymm){
+    mount.innerHTML = `<div class="card" style="margin-top:12px;"><p class="muted">内訳読み込み中…（${yyyymm}）</p></div>`;
+    try{
+      const res = await fetch(buildBreakdownUrl(yyyymm), {
+        headers: { "X-Requested-With": "fetch" }
+      });
+      if(!res.ok) throw new Error("fetch failed");
+      const html = await res.text();
+      mount.innerHTML = html;
+
+      // ちょいスクロール（気持ちよさ）
+      mount.scrollIntoView({ behavior: "smooth", block: "start" });
+    }catch(e){
+      mount.innerHTML = `<div class="card" style="margin-top:12px;"><p class="muted">内訳の取得に失敗した…</p></div>`;
+    }
+  }
+
+  // 行クリック（data-month を見て読みにいく）
+  table.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-month]");
+    if(!tr) return;
+    const yyyymm = tr.getAttribute("data-month");
+    if(!yyyymm) return;
+    loadBreakdown(yyyymm);
+  });
+})();
+</script>
+
 {% endblock %}
