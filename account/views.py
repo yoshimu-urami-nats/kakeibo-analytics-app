@@ -212,8 +212,20 @@ def eda(request):
 
 @login_required
 def prediction(request):
-    # --- 除外カテゴリ（まずは“名前に含まれる語”で除外） ---
-    exclude_keywords = ["家具", "家電"]
+    # --- 追加：GETで調整できるようにする ---
+    # ?min_train=6 みたいに変えられる
+    try:
+        min_train = int(request.GET.get("min_train", "3"))
+    except ValueError:
+        min_train = 3
+    min_train = max(2, min_train)  # 最低2
+
+    # ?exclude=家具,家電,税金 みたいに渡せる（空ならデフォルト）
+    exclude_param = (request.GET.get("exclude") or "").strip()
+    if exclude_param:
+        exclude_keywords = [x.strip() for x in exclude_param.split(",") if x.strip()]
+    else:
+        exclude_keywords = ["家具", "家電"]
 
     exclude_q = Q()
     for kw in exclude_keywords:
@@ -279,6 +291,11 @@ def prediction(request):
     errors_sq = []
     errors_pct = []
 
+    # --- ベースライン（ナイーブ）用 ---
+    naive_abs = []
+    naive_sq = []
+    naive_pct = []
+
     if len(series) >= (min_train + 1):
         for t in range(min_train, len(series)):
             train = series[:t]
@@ -292,18 +309,33 @@ def prediction(request):
             pred = int(round(s * test["i"] + b))
             actual = int(test["total"])
 
+            # ★ベースライン：直前月の実績をそのまま予測とみなす
+            naive_pred = int(train[-1]["total"]) if train else 0
+
+            # 誤差
             err = pred - actual
             ae = abs(err)
             se = err * err
 
-            # MAPE用（0割回避）
+            # ベースライン誤差
+            n_err = naive_pred - actual
+            n_ae = abs(n_err)
+            n_se = n_err * n_err
+
             ape = None
+            n_ape = None
             if actual != 0:
                 ape = abs(err) / abs(actual) * 100.0
                 errors_pct.append(ape)
 
+                n_ape = abs(n_err) / abs(actual) * 100.0
+                naive_pct.append(n_ape)
+
             errors_abs.append(ae)
             errors_sq.append(se)
+
+            naive_abs.append(n_ae)
+            naive_sq.append(n_se)
 
             backtests.append({
                 "month": test["billing_month"],
@@ -313,6 +345,12 @@ def prediction(request):
                 "error": err,
                 "abs_error": ae,
                 "ape": ape,  # %
+
+                # ★ベースライン
+                "naive_pred": naive_pred,
+                "naive_error": n_err,
+                "naive_abs_error": n_ae,
+                "naive_ape": n_ape,
             })
 
     metrics = {
@@ -320,15 +358,42 @@ def prediction(request):
         "mae": None,
         "rmse": None,
         "mape": None,
+
+        # ベースライン
+        "naive_mae": None,
+        "naive_rmse": None,
+        "naive_mape": None,
+
+        # 改善率（MAEでどれだけ良いか）
+        "mae_improve_pct": None,
     }
+
+    worst_months = []
 
     if backtests:
         metrics["mae"] = int(round(sum(errors_abs) / len(errors_abs)))
         metrics["rmse"] = int(round((sum(errors_sq) / len(errors_sq)) ** 0.5))
         metrics["mape"] = round(sum(errors_pct) / len(errors_pct), 1) if errors_pct else None
 
+        metrics["naive_mae"] = int(round(sum(naive_abs) / len(naive_abs)))
+        metrics["naive_rmse"] = int(round((sum(naive_sq) / len(naive_sq)) ** 0.5))
+        metrics["naive_mape"] = round(sum(naive_pct) / len(naive_pct), 1) if naive_pct else None
+
+        if metrics["naive_mae"] and metrics["naive_mae"] != 0:
+            metrics["mae_improve_pct"] = round(
+                (metrics["naive_mae"] - metrics["mae"]) / metrics["naive_mae"] * 100.0, 1
+            )
+
+        # ★ズレが大きい月（%誤差が取れるやつだけ）上位3
+        worst_months = sorted(
+            [r for r in backtests if r["ape"] is not None],
+            key=lambda r: r["ape"],
+            reverse=True
+        )[:3]
+
     return render(request, "account/prediction.html", {
         "exclude_keywords": exclude_keywords,
+        "exclude_param": ",".join(exclude_keywords),  # ★入力欄に戻す用
         "series": series,
 
         "slope": slope,
@@ -336,10 +401,10 @@ def prediction(request):
         "pred_next": pred_next,
         "next_month": next_month,
 
-        # ★バックテスト表示用
         "backtests": backtests,
         "metrics": metrics,
-        "min_train": min_train,
+        "min_train": min_train,          # ★固定じゃなくなる
+        "worst_months": worst_months,    # ★追加
     })
 
 

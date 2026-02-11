@@ -12,6 +12,22 @@
     <li>予測対象：請求月ごとの合計支出（カテゴリ除外後）</li>
     <li>除外カテゴリ（暫定）：{{ exclude_keywords|join:", " }}</li>
   </ul>
+
+  <h2 class="h2" style="margin-top:14px;">設定</h2>
+  <form method="get" class="table-toolbar" style="grid-template-columns: 1fr 180px auto; gap:10px;">
+    <input class="input" type="text" name="exclude" placeholder="除外カテゴリ（カンマ区切り）"
+           value="{{ exclude_param|default:'' }}">
+
+    <input class="input" type="number" name="min_train" min="2"
+           value="{{ min_train }}" style="text-align:right;">
+
+    <button class="btn" type="submit">再計算</button>
+  </form>
+
+  <p class="muted" style="margin-top:8px;">
+    例：exclude=家具,家電,税金 / min_train=6
+  </p>
+
 </div>
 
 <div class="card">
@@ -62,12 +78,31 @@
 
     <ul class="muted">
       <li>検証回数：<b>{{ metrics.n }}</b></li>
-      <li>MAE（平均絶対誤差）：<b>¥{{ metrics.mae|intcomma }}</b></li>
-      <li>RMSE（誤差の大きい月に厳しい）：<b>¥{{ metrics.rmse|intcomma }}</b></li>
+
+      <li>
+        MAE（平均絶対誤差）：
+        <b>¥{{ metrics.mae|intcomma }}</b>
+        <span class="muted">（ベースライン：¥{{ metrics.naive_mae|intcomma }}）</span>
+        {% if metrics.mae_improve_pct != None %}
+          <span class="muted">／改善：<b>{{ metrics.mae_improve_pct }}%</b></span>
+        {% endif %}
+      </li>
+
+      <li>
+        RMSE：
+        <b>¥{{ metrics.rmse|intcomma }}</b>
+        <span class="muted">（ベースライン：¥{{ metrics.naive_rmse|intcomma }}）</span>
+      </li>
+
       {% if metrics.mape %}
-        <li>MAPE（平均%誤差）：<b>{{ metrics.mape }}%</b></li>
+        <li>
+          MAPE：
+          <b>{{ metrics.mape }}%</b>
+          <span class="muted">（ベースライン：{{ metrics.naive_mape }}%）</span>
+        </li>
       {% endif %}
     </ul>
+
 
     <table class="summary-table" style="margin-top:10px;">
       <thead>
@@ -75,6 +110,7 @@
           <th>対象月</th>
           <th class="num">学習月数</th>
           <th class="num">予測</th>
+          <th class="num">ベースライン</th>
           <th class="num">実績</th>
           <th class="num">誤差(予測-実績)</th>
           <th class="num">絶対誤差</th>
@@ -87,6 +123,7 @@
           <td>{{ r.month }}</td>
           <td class="num">{{ r.train_months }}</td>
           <td class="num">¥{{ r.pred|intcomma }}</td>
+          <td class="num">¥{{ r.naive_pred|intcomma }}</td>
           <td class="num">¥{{ r.actual|intcomma }}</td>
           <td class="num">{% if r.error >= 0 %}+{% endif %}¥{{ r.error|intcomma }}</td>
           <td class="num">¥{{ r.abs_error|intcomma }}</td>
@@ -102,6 +139,34 @@
       </tbody>
     </table>
 
+    {% if worst_months and worst_months|length > 0 %}
+    <div class="card" style="margin-top:12px;">
+      <h2 class="h2">誤差が大きい月（要因調査候補）</h2>
+      <p class="muted">ズレが大きい月は「一時イベント支出」が混ざっている可能性が高い。</p>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>対象月</th>
+            <th class="num">実績</th>
+            <th class="num">予測</th>
+            <th class="num">%誤差</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in worst_months %}
+          <tr>
+            <td>{{ r.month }}</td>
+            <td class="num">¥{{ r.actual|intcomma }}</td>
+            <td class="num">¥{{ r.pred|intcomma }}</td>
+            <td class="num">{{ r.ape|floatformat:1 }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
     <p class="muted" style="margin-top:10px;">
       ※精度が悪い月がある場合、「一時的イベント支出（旅行/家具/家電/医療/税金等）」が原因かを疑い、
       その月の扱い（除外/別カテゴリ化/特徴量追加）を検討。
@@ -112,6 +177,8 @@
       バックテストするにはデータが足りません（最低 {{ min_train|add:"1" }} か月分必要）。
     </p>
   {% endif %}
+
+
 </div>
 
 <div class="card">
