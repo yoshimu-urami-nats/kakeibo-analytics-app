@@ -1,4 +1,10 @@
-# transactions/seed_data.py
+"""
+NOTE:
+2026-02-13 現在は使用していません。
+旧seedロジック保管用。
+分類ロジックの本体は transactions/rules.py にあります。
+"""
+
 
 MEMBERS = ["な", "ゆ", "共有"]
 
