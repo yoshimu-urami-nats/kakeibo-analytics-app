@@ -216,3 +216,6 @@ data_raw/
 
 # でもデモ用だけは Git に乗せる
 !demo_transactions.csv
+
+# local only
+_local/

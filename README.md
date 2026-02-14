@@ -54,23 +54,6 @@
 
 
 
-##  Project Structure
-
-```text
-kakeibo-analytics-app/
-├── streamlit_app.py
-├── requirements.txt
-├── data_demo/
-│   ├── demo_transactions.csv
-│   └── demo.db.
-├── data_real/        # gitignore
-│   └── real.db.
-├── docs/
-└── README.md
-```
-
-
-
 ##  Data Policy
 
 - 実データはリポジトリに含めません
