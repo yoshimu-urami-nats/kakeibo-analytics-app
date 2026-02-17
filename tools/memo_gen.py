@@ -1,3 +1,7 @@
+# 旧メモジェネレーター　現在使用無し
+# 旧全投入メモ自動生成ツール
+# コマンド：python tools/memo_gen.py
+
 from __future__ import annotations
 
 import argparse
