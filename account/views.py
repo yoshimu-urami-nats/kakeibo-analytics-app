@@ -9,55 +9,8 @@ from statistics import median
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from account.utils.date_utils import yyyymm_key, yyyymm_label, yyyymm_add1
+from account.utils.stats_utils import linear_regression, percentile, zone_label
 
-def _linear_regression(points: list[tuple[float, float]]):
-    """
-    points: [(x, y), ...]
-    return: (slope, intercept)
-    """
-    n = len(points)
-    if n < 2:
-        return None, None
-
-    xs = [p[0] for p in points]
-    ys = [p[1] for p in points]
-
-    x_mean = sum(xs) / n
-    y_mean = sum(ys) / n
-
-    denom = sum((x - x_mean) ** 2 for x in xs)
-    if denom == 0:
-        return None, None
-
-    num = sum((x - x_mean) * (y - y_mean) for x, y in points)
-    slope = num / denom
-    intercept = y_mean - slope * x_mean
-    return slope, intercept
-
-def _percentile(values: list[int], p: float) -> int:
-    """
-    p: 0.0〜1.0
-    線形補間のパーセンタイル（ざっくりで十分）
-    """
-    if not values:
-        return 0
-    xs = sorted(values)
-    if len(xs) == 1:
-        return xs[0]
-    k = (len(xs) - 1) * p
-    f = int(k)
-    c = min(f + 1, len(xs) - 1)
-    if f == c:
-        return xs[f]
-    d = k - f
-    return int(round(xs[f] + (xs[c] - xs[f]) * d))
-
-def _zone_label(cur: int, med: int, p75: int) -> str:
-    if cur <= med:
-        return "安定ゾーン"
-    if cur <= p75:
-        return "高めゾーン"
-    return "負担感あり"
 
 def home(request):
     return render(request, "account/home.html")
@@ -264,7 +217,7 @@ def prediction(request):
         next_month = ""
         if len(series) >= 2:
             points = [(d["i"], d["total"]) for d in series]
-            slope, intercept = _linear_regression(points)
+            slope, intercept = linear_regression(points)
             if slope is not None:
                 next_i = series[-1]["i"] + 1
                 pred_next = int(round(slope * next_i + intercept))
@@ -286,7 +239,7 @@ def prediction(request):
                 test = series[t]
 
                 pts = [(d["i"], d["total"]) for d in train]
-                s, b = _linear_regression(pts)
+                s, b = linear_regression(pts)
                 if s is None:
                     continue
 
@@ -489,7 +442,7 @@ def zones(request):
         vals = [base_pivot.get(mo, {}).get(cat, 0) for mo in base_months]
 
         med = int(median(vals)) if vals else 0
-        p75 = _percentile(vals, 0.75) if vals else 0
+        p75 = percentile(vals, 0.75) if vals else 0
         cur = cur_by_cat.get(cat, 0)
 
         cards.append({
@@ -498,7 +451,7 @@ def zones(request):
             "median": med,
             "p75": p75,
             "delta": cur - med,
-            "zone": _zone_label(cur, med, p75),
+            "zone": zone_label(cur, med, p75),
         })
 
     contrib = sorted(cards, key=lambda x: x["delta"], reverse=True)
