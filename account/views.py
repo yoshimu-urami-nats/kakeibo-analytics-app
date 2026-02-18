@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from account.utils.date_utils import yyyymm_key, yyyymm_label, yyyymm_add1
 from account.utils.stats_utils import linear_regression, percentile, zone_label
+from account.services.prediction_service import run_prediction
+from account.services.prediction_service import build_monthly_series
 
 
 def home(request):
@@ -166,181 +168,18 @@ def prediction(request):
     else:
         base_exclude_keywords = ["家具・家電"]
 
-    # -----------------------------
-    # 1) 共通：計算ロジックを関数化
-    # -----------------------------
-    def _run_prediction(exclude_keywords: list[str], min_train: int):
-        # 除外Q
-        exclude_q = Q()
-        for kw in exclude_keywords:
-            exclude_q |= Q(category__name__icontains=kw)
-
-        # 対象データ
-        base = (
-            Transaction.objects
-            .exclude(source_file="")
-            .exclude(category__isnull=True)
-            .exclude(exclude_q)
-        )
-
-        # source_file ごとの合計
-        rows = (
-            base
-            .values("source_file")
-            .annotate(total_amount=Sum("amount"))
-        )
-
-        # YYYYMM（月）へ寄せて集計（同月に複数CSVがあっても足し込む）
-        month_totals: dict[str, int] = {}
-        for r in rows:
-            sf = r["source_file"] or ""
-            mo = yyyymm_label(sf)  # "202602"
-            if not mo:
-                continue
-            month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
-
-        months_sorted = sorted(
-            month_totals.keys(),
-            key=lambda m: int(m) if (m and m.isdigit()) else -1
-        )
-
-        series = []
-        for i, mo in enumerate(months_sorted):
-            series.append({
-                "i": i,
-                "billing_month": mo,
-                "total": int(month_totals[mo] or 0),
-            })
-
-        # 予測（全期間1本）
-        slope = intercept = pred_next = None
-        next_month = ""
-        if len(series) >= 2:
-            points = [(d["i"], d["total"]) for d in series]
-            slope, intercept = linear_regression(points)
-            if slope is not None:
-                next_i = series[-1]["i"] + 1
-                pred_next = int(round(slope * next_i + intercept))
-                next_month = yyyymm_add1(series[-1]["billing_month"])
-
-        # バックテスト（walk-forward）
-        backtests = []
-        errors_abs = []
-        errors_sq = []
-        errors_pct = []
-
-        naive_abs = []
-        naive_sq = []
-        naive_pct = []
-
-        if len(series) >= (min_train + 1):
-            for t in range(min_train, len(series)):
-                train = series[:t]
-                test = series[t]
-
-                pts = [(d["i"], d["total"]) for d in train]
-                s, b = linear_regression(pts)
-                if s is None:
-                    continue
-
-                pred = int(round(s * test["i"] + b))
-                actual = int(test["total"])
-
-                # ベースライン：直前月
-                naive_pred = int(train[-1]["total"]) if train else 0
-
-                err = pred - actual
-                ae = abs(err)
-                se = err * err
-
-                n_err = naive_pred - actual
-                n_ae = abs(n_err)
-                n_se = n_err * n_err
-
-                ape = None
-                n_ape = None
-                if actual != 0:
-                    ape = abs(err) / abs(actual) * 100.0
-                    errors_pct.append(ape)
-
-                    n_ape = abs(n_err) / abs(actual) * 100.0
-                    naive_pct.append(n_ape)
-
-                errors_abs.append(ae)
-                errors_sq.append(se)
-
-                naive_abs.append(n_ae)
-                naive_sq.append(n_se)
-
-                backtests.append({
-                    "month": test["billing_month"],
-                    "train_months": len(train),
-                    "pred": pred,
-                    "actual": actual,
-                    "error": err,
-                    "abs_error": ae,
-                    "ape": ape,
-
-                    "naive_pred": naive_pred,
-                    "naive_error": n_err,
-                    "naive_abs_error": n_ae,
-                    "naive_ape": n_ape,
-                })
-
-        metrics = {
-            "n": len(backtests),
-            "mae": None,
-            "rmse": None,
-            "mape": None,
-            "naive_mae": None,
-            "naive_rmse": None,
-            "naive_mape": None,
-            "mae_improve_pct": None,
-        }
-
-        worst_months = []
-        if backtests:
-            metrics["mae"] = int(round(sum(errors_abs) / len(errors_abs)))
-            metrics["rmse"] = int(round((sum(errors_sq) / len(errors_sq)) ** 0.5))
-            metrics["mape"] = round(sum(errors_pct) / len(errors_pct), 1) if errors_pct else None
-
-            metrics["naive_mae"] = int(round(sum(naive_abs) / len(naive_abs)))
-            metrics["naive_rmse"] = int(round((sum(naive_sq) / len(naive_sq)) ** 0.5))
-            metrics["naive_mape"] = round(sum(naive_pct) / len(naive_pct), 1) if naive_pct else None
-
-            if metrics["naive_mae"] and metrics["naive_mae"] != 0:
-                metrics["mae_improve_pct"] = round(
-                    (metrics["naive_mae"] - metrics["mae"]) / metrics["naive_mae"] * 100.0, 1
-                )
-
-            worst_months = sorted(
-                [r for r in backtests if r["ape"] is not None],
-                key=lambda r: r["ape"],
-                reverse=True
-            )[:3]
-
-        return {
-            "exclude_keywords": exclude_keywords,
-            "series": series,
-            "slope": slope,
-            "intercept": intercept,
-            "pred_next": pred_next,
-            "next_month": next_month,
-            "backtests": backtests,
-            "metrics": metrics,
-            "worst_months": worst_months,
-        }
+    
 
     # -----------------------------
     # 2) 比較：交際「含む」vs「除外」
     # -----------------------------
-    result_include = _run_prediction(base_exclude_keywords, min_train)
+    result_include = run_prediction(base_exclude_keywords, min_train)
 
     # 「交際」を除外に足した版（すでに入ってたら二重にしない）
     exclude_plus_social = list(base_exclude_keywords)
     if not any("交際" in x for x in exclude_plus_social):
         exclude_plus_social.append("交際")
-    result_exclude = _run_prediction(exclude_plus_social, min_train)
+    result_exclude = run_prediction(exclude_plus_social, min_train)
 
     # -----------------------------
     # 3) 画面表示用：メイン表示は「含む」側を従来通り出す
@@ -487,33 +326,9 @@ def prediction_breakdown(request, yyyymm: str):
     for kw in exclude_keywords:
         exclude_q |= Q(category__name__icontains=kw)
 
-    # --- ② まず「Predictionで使ってる月次系列」を同条件で作る（重要） ---
-    # 同月に複数CSVがあっても足し込む（prediction() と同じ方針）
-    base_for_series = (
-        Transaction.objects
-        .exclude(source_file="")
-        .exclude(category__isnull=True)
-        .exclude(exclude_q)
-    )
-
-    rows = (
-        base_for_series
-        .values("source_file")
-        .annotate(total_amount=Sum("amount"))
-    )
-
-    month_totals: dict[str, int] = {}
-    for r in rows:
-        sf = r["source_file"] or ""
-        mo = yyyymm_label(sf)  # "202602" みたいなYYYYMMに寄せる
-        if not mo:
-            continue
-        month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
-
-    months_sorted = sorted(
-        month_totals.keys(),
-        key=lambda m: int(m) if (m and m.isdigit()) else -1
-    )
+    # --- ② まず「Predictionで使ってる月次系列」を同条件で作る（service版） ---
+    series, month_totals = build_monthly_series(exclude_keywords)
+    months_sorted = [d["billing_month"] for d in series]
 
     # 対象月が series に存在するか確認
     if yyyymm not in months_sorted:
@@ -547,7 +362,7 @@ def prediction_breakdown(request, yyyymm: str):
         .exclude(source_file="")
         .exclude(category__isnull=True)
         .exclude(exclude_q)
-        .filter(source_file__startswith=yyyymm)  # 同月ファイル全部拾う
+        .filter(source_file__startswith=yyyymm)
     )
 
     cat_rows = (
@@ -566,15 +381,13 @@ def prediction_breakdown(request, yyyymm: str):
 
     total_all = int(target_qs.aggregate(s=Sum("amount"))["s"] or 0)
 
-    # --- ④ 学習期間（過去月）の内訳（★追加） ---
+    # --- ④ 学習期間（過去月）の内訳 ---
     train_cat_rows = []
     train_shop_rows = []
     train_total_all = 0
     train_month_totals = []
 
     if train_months:
-        # 学習期間に該当する source_file を拾う（startswith で "YYYYMM" をまとめて拾う）
-        # OR が多くなりすぎるのを避けたいなら、件数が増えた時に別アプローチにする
         train_q = Q()
         for mo in train_months:
             train_q |= Q(source_file__startswith=mo)
@@ -609,6 +422,7 @@ def prediction_breakdown(request, yyyymm: str):
                 "month": mo,
                 "total": int(month_totals.get(mo, 0)),
             })
+    
 
     # --- ⑤ render ---
     html = render_to_string(
