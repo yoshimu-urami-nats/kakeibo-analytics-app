@@ -8,23 +8,7 @@ from datetime import datetime
 from statistics import median
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-
-def _yyyymm_key(s: str) -> int:
-    """source_file から YYYYMM を抜いて、ソート用の数値にする"""
-    m = re.search(r"(\d{6})", s or "")
-    return int(m.group(1)) if m else -1
-
-def _yyyymm_label(s: str) -> str:
-    """表示用に YYYYMM を返す（取れなければ元文字列）"""
-    m = re.search(r"(\d{6})", s or "")
-    return m.group(1) if m else (s or "")
-
-def _yyyymm_add1(yyyymm: str) -> str:
-    """YYYYMM を 1か月進めた YYYYMM を返す"""
-    dt = datetime.strptime(yyyymm, "%Y%m")
-    y = dt.year + (1 if dt.month == 12 else 0)
-    m = 1 if dt.month == 12 else dt.month + 1
-    return f"{y:04d}{m:02d}"
+from account.utils.date_utils import yyyymm_key, yyyymm_label, yyyymm_add1
 
 def _linear_regression(points: list[tuple[float, float]]):
     """
@@ -96,7 +80,7 @@ def eda(request):
         )
     )
 
-    rows_sorted = sorted(list(rows), key=lambda r: _yyyymm_key(r["source_file"]))
+    rows_sorted = sorted(list(rows), key=lambda r: yyyymm_key(r["source_file"]))
 
     billing_stats = []
     for r in rows_sorted:
@@ -257,7 +241,7 @@ def prediction(request):
         month_totals: dict[str, int] = {}
         for r in rows:
             sf = r["source_file"] or ""
-            mo = _yyyymm_label(sf)  # "202602"
+            mo = yyyymm_label(sf)  # "202602"
             if not mo:
                 continue
             month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
@@ -284,7 +268,7 @@ def prediction(request):
             if slope is not None:
                 next_i = series[-1]["i"] + 1
                 pred_next = int(round(slope * next_i + intercept))
-                next_month = _yyyymm_add1(series[-1]["billing_month"])
+                next_month = yyyymm_add1(series[-1]["billing_month"])
 
         # バックテスト（walk-forward）
         backtests = []
@@ -448,7 +432,7 @@ def zones(request):
     # ★ YYYYMM ラベルごとに source_file を束ねる（同月に複数ファイルがあってもOK）
     month_to_sfs: dict[str, list[str]] = {}
     for sf in sfs:
-        mo = _yyyymm_label(sf)   # "202602" みたいな表示用YYYYMM
+        mo = yyyymm_label(sf)   # "202602" みたいな表示用YYYYMM
         if mo:
             month_to_sfs.setdefault(mo, []).append(sf)
 
@@ -485,7 +469,7 @@ def zones(request):
     # month(YYYYMM) -> cat -> total
     base_pivot: dict[str, dict[str, int]] = {}
     for r in base_rows:
-        mo = _yyyymm_label(r["source_file"])
+        mo = yyyymm_label(r["source_file"])
         cat = r["category__name"]
         base_pivot.setdefault(mo, {})
         base_pivot[mo][cat] = base_pivot[mo].get(cat, 0) + int(r["total"] or 0)  # ★同月を足し込む
@@ -568,7 +552,7 @@ def prediction_breakdown(request, yyyymm: str):
     month_totals: dict[str, int] = {}
     for r in rows:
         sf = r["source_file"] or ""
-        mo = _yyyymm_label(sf)  # "202602" みたいなYYYYMMに寄せる
+        mo = yyyymm_label(sf)  # "202602" みたいなYYYYMMに寄せる
         if not mo:
             continue
         month_totals[mo] = month_totals.get(mo, 0) + int(r["total_amount"] or 0)
