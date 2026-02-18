@@ -2,14 +2,13 @@
 import re
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Sum, Q, F
+from django.db.models import Count, Sum, Q
 from transactions.models import Transaction
-from datetime import datetime
 from statistics import median
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from account.utils.date_utils import yyyymm_key, yyyymm_label, yyyymm_add1
-from account.utils.stats_utils import linear_regression, percentile, zone_label
+from account.utils.date_utils import yyyymm_key, yyyymm_label
+from account.utils.stats_utils import percentile, zone_label
 from account.services.prediction_service import run_prediction
 from account.services.prediction_service import build_monthly_series
 

@@ -1,6 +1,5 @@
 from django.db import models
 from members.models import Member
-from datetime import date as date_class
 
 class Category(models.Model):
     name = models.CharField("カテゴリ名", max_length=50)

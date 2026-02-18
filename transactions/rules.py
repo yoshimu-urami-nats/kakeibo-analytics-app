@@ -61,7 +61,6 @@ def guess_category(shop: str) -> Optional[str]:
 
     return None
 
-from datetime import date
 
 # ルール：店名に「これ」が含まれてたらこのメンバー
 MEMBER_RULES = {
