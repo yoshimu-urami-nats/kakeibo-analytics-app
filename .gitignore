@@ -219,3 +219,6 @@ data_raw/
 
 # local only
 _local/
+
+# issues
+docs/issues
