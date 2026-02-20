@@ -12,6 +12,7 @@ from account.utils.stats_utils import percentile, zone_label
 from account.services.prediction_service import run_prediction
 from account.services.prediction_service import build_monthly_series
 from account.services.eda_service import build_eda_context
+from account.services.zones_service import build_zones_context
 
 
 def home(request):
@@ -83,101 +84,9 @@ def prediction(request):
 
 @login_required
 def zones(request):
-    target_names = ["食品・日用品", "外食", "娯楽"]
-    N = 12
+    context = build_zones_context()
+    return render(request, "account/zones.html", context)
 
-    # まず存在する source_file 一覧
-    sfs = list(
-        Transaction.objects
-        .exclude(source_file="")
-        .values_list("source_file", flat=True)
-        .distinct()
-    )
-    if not sfs:
-        return render(request, "account/zones.html", {"has_data": False})
-
-    # ★ YYYYMM ラベルごとに source_file を束ねる（同月に複数ファイルがあってもOK）
-    month_to_sfs: dict[str, list[str]] = {}
-    for sf in sfs:
-        mo = yyyymm_label(sf)   # "202602" みたいな表示用YYYYMM
-        if mo:
-            month_to_sfs.setdefault(mo, []).append(sf)
-
-    months_sorted = sorted(month_to_sfs.keys(), key=lambda m: int(m) if m.isdigit() else -1)
-    if not months_sorted:
-        return render(request, "account/zones.html", {"has_data": False})
-
-    # 今月（最新YYYYMM）
-    current_month = months_sorted[-1]
-    current_sfs = month_to_sfs[current_month]  # ★同月ファイルを全部今月扱い
-
-    # ベース（月ラベルのリスト：最新を除いた直近N）
-    base_months = months_sorted[:-1][-N:]
-    base_sfs = []
-    for mo in base_months:
-        base_sfs.extend(month_to_sfs.get(mo, []))
-
-    # 対象データ
-    base_qs = (
-        Transaction.objects
-        .exclude(source_file="")
-        .exclude(category__isnull=True)
-        .filter(category__name__in=target_names)
-    )
-
-    # ① ベース期間：月×カテゴリ 合計（source_fileはbase_sfsに寄せる）
-    base_rows = (
-        base_qs
-        .filter(source_file__in=base_sfs)
-        .values("source_file", "category__name")
-        .annotate(total=Sum("amount"))
-    )
-
-    # month(YYYYMM) -> cat -> total
-    base_pivot: dict[str, dict[str, int]] = {}
-    for r in base_rows:
-        mo = yyyymm_label(r["source_file"])
-        cat = r["category__name"]
-        base_pivot.setdefault(mo, {})
-        base_pivot[mo][cat] = base_pivot[mo].get(cat, 0) + int(r["total"] or 0)  # ★同月を足し込む
-
-    # ② 今月：カテゴリ合計（同月ファイル全部）
-    cur_rows = (
-        base_qs
-        .filter(source_file__in=current_sfs)
-        .values("category__name")
-        .annotate(total=Sum("amount"))
-    )
-    cur_by_cat = {r["category__name"]: int(r["total"] or 0) for r in cur_rows}
-
-    # ③ カテゴリごとに「中央値 / 75% / 今月 / ゾーン」
-    cards = []
-    for cat in target_names:
-        vals = [base_pivot.get(mo, {}).get(cat, 0) for mo in base_months]
-
-        med = int(median(vals)) if vals else 0
-        p75 = percentile(vals, 0.75) if vals else 0
-        cur = cur_by_cat.get(cat, 0)
-
-        cards.append({
-            "name": cat,
-            "current": cur,
-            "median": med,
-            "p75": p75,
-            "delta": cur - med,
-            "zone": zone_label(cur, med, p75),
-        })
-
-    contrib = sorted(cards, key=lambda x: x["delta"], reverse=True)
-
-    return render(request, "account/zones.html", {
-        "has_data": True,
-        "current_month": current_month,
-        "base_months": base_months,
-        "n_base": len(base_months),
-        "cards": cards,
-        "contrib": contrib,
-    })
 
 @login_required
 def prediction_breakdown(request, yyyymm: str):

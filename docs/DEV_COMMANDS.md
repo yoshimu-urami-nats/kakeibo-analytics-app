@@ -30,6 +30,12 @@ pip install -r requirements.txt
 
 # ブランチ関連
 
+## ブランチ分け
+
+```bash
+git checkout -b refactor/eda-service
+```
+
 ## main に切り替え
 
 ```bash
