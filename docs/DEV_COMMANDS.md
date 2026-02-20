@@ -28,6 +28,22 @@ pip install -r requirements.txt
 
 <br>
 
+# ブランチ関連
+
+## main に切り替え
+
+```bash
+git checkout main
+```
+
+## マージ
+
+```bash
+git merge ブランチ名
+```
+
+<br>
+
 ## ローカルのstreamlit
 
 ```bash
