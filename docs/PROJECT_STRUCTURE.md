@@ -34,10 +34,53 @@ kakeibo-analytics-app/
 ## 各フォルダの用途
 ### account/
 
-- 役割：ログイン、トップ（home）、予測/EDA系ページの表示、共通レイアウト
-- 主な入口
-  - `account/views.py`
-  - `account/templates/account/`（`base.html`, `home.html`, `login.html`, `prediction.html`, `eda.html` 等）
+- 役割：ログイン、トップ（home）、予測/EDA/Zonesページの表示
+- 設計方針：
+  - `views.py` は「リクエスト処理＋service呼び出し＋render」に限定
+  - 集計・DBアクセス・判定ロジックは `services/` に分離
+  - 汎用小物関数は `utils/` に分離
+
+#### 主な入口
+
+- `account/views.py`  
+  - home / csv_import / eda / prediction / zones / prediction_breakdown
+  - 基本は service を呼ぶだけの薄い構成
+
+#### services/
+
+- `account/services/prediction_service.py`
+  - 月次系列生成
+  - 予測ロジック（回帰・バックテストなど）
+
+- `account/services/eda_service.py`
+  - 請求月×カテゴリ×メンバー集計
+  - EDAページ用テーブル構築
+
+- `account/services/zones_service.py`
+  - ゾーン判定（中央値・75%・増減寄与）
+
+- `account/services/prediction_breakdown_service.py`
+  - 指定月のカテゴリ・店舗内訳集計
+  - 学習期間内訳集計
+
+#### utils/
+
+- `account/utils/date_utils.py`
+  - YYYYMM変換・ラベル処理
+
+- `account/utils/stats_utils.py`
+  - percentile計算
+  - zone判定補助
+
+#### templates
+
+- `account/templates/account/`
+  - base.html
+  - home.html
+  - prediction.html
+  - eda.html
+  - zones.html
+  - _prediction_breakdown.html
 
 ---
 
