@@ -70,6 +70,8 @@ def prediction(request):
         "backtests": result_include["backtests"],
         "metrics": result_include["metrics"],
         "worst_months": result_include["worst_months"],
+        "z_scores": result_include["z_scores"],
+        "anomaly_top_months": result_include["anomaly_top_months"],
 
         # 追加：比較用（2本）
         "compare_include": result_include,

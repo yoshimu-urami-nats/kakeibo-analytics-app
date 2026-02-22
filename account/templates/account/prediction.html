@@ -1,3 +1,5 @@
+<!-- account\templates\account\prediction.html -->
+
 {% extends "account/base.html" %}
 {% load humanize %}
 {% block title %}Prediction{% endblock %}
@@ -194,6 +196,40 @@
       </tbody>
     </table>
 
+    {% if anomaly_top_months and anomaly_top_months|length > 0 %}
+    <div class="card" style="margin-top:12px;">
+      <h2 class="h2">統計的に異常な月（Zスコア TOP3）</h2>
+      <p class="muted">
+        過去の月次合計の「平均との差」を、ばらつき（標準偏差）で割った指標です。<br>
+        |Z| が大きいほど “いつもと違う月” です（予測誤差とは別物）。
+      </p>
+
+      <table class="summary-table" id="zAnomalyTable">
+        <thead>
+          <tr>
+            <th>対象月</th>
+            <th class="num">合計</th>
+            <th class="num">Z</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in anomaly_top_months %}
+          <tr data-month="{{ r.month }}" style="cursor:pointer;">
+            <td>{{ r.month }}</td>
+            <td class="num">¥{{ r.total|intcomma }}</td>
+            <td class="num">{% if r.z >= 0 %}+{% endif %}{{ r.z }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="muted" style="margin-top:8px;">
+        ※クリックすると同じ内訳（breakdown）を表示します。
+      </div>
+    </div>
+    {% endif %}
+
+
     {% if worst_months and worst_months|length > 0 %}
     <div class="card" style="margin-top:12px;">
       <h2 class="h2">誤差が大きい月（要因調査候補）</h2>
@@ -245,14 +281,18 @@
     過去の推移を一本の直線で近似した“目安”です。
     一時的なイベント支出が起きた月は誤差が出ます。
   </p>
+
 </div>
+
+
 
 <script>
 (function(){
   // 「誤差が大きい月」テーブルをクリックできるようにする
   const table = document.getElementById("worstMonthsTable");
+  const zTable = document.getElementById("zAnomalyTable");
   const mount = document.getElementById("breakdownMount");
-  if(!table || !mount) return;
+  if(!mount) return; // mountだけ必須
 
   // 現在の exclude/min_train を URL から引き継ぐ（Prediction と同条件で内訳を出す）
   const curUrl = new URL(window.location.href);
@@ -283,14 +323,28 @@
     }
   }
 
-  // 行クリック（data-month を見て読みにいく）
-  table.addEventListener("click", (e) => {
-    const tr = e.target.closest("tr[data-month]");
-    if(!tr) return;
-    const yyyymm = tr.getAttribute("data-month");
-    if(!yyyymm) return;
-    loadBreakdown(yyyymm);
-  });
+  // worstMonthsTable があるときだけ登録
+  if(table){
+    table.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr[data-month]");
+      if(!tr) return;
+      const yyyymm = tr.getAttribute("data-month");
+      if(!yyyymm) return;
+      loadBreakdown(yyyymm);
+    });
+  }
+
+  // zTable があるときだけ登録
+  if(zTable){
+    zTable.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr[data-month]");
+      if(!tr) return;
+      const yyyymm = tr.getAttribute("data-month");
+      if(!yyyymm) return;
+      loadBreakdown(yyyymm);
+    });
+  }
+
 })();
 </script>
 

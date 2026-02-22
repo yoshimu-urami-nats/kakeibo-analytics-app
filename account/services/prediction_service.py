@@ -10,6 +10,19 @@ from transactions.models import Transaction
 
 from account.utils.date_utils import yyyymm_add1
 from account.utils.stats_utils import linear_regression
+import math
+
+def _mean(values: list[int]) -> float:
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
+
+def _std(values: list[int]) -> float:
+    if len(values) < 2:
+        return 0.0
+    m = _mean(values)
+    var = sum((v - m) ** 2 for v in values) / len(values)
+    return math.sqrt(var)
 
 def build_monthly_series(exclude_keywords: list[str]) -> tuple[list[dict], dict[str, int]]:
     """
@@ -159,6 +172,29 @@ def run_prediction(exclude_keywords: list[str], min_train: int) -> dict:
             reverse=True
         )[:3]
 
+    # -----------------------------
+    # Zスコア（統計的異常）
+    # -----------------------------
+    totals = [d["total"] for d in series]
+    mean_val = _mean(totals)
+    std_val = _std(totals)
+
+    z_scores = []
+    if std_val > 0:
+        for d in series:
+            z = (d["total"] - mean_val) / std_val
+            z_scores.append({
+                "month": d["billing_month"],
+                "total": d["total"],
+                "z": round(z, 2),
+            })
+
+    anomaly_top_months = sorted(
+        z_scores,
+        key=lambda x: abs(x["z"]),
+        reverse=True
+    )[:3]
+
     return {
         "exclude_keywords": exclude_keywords,
         "series": series,
@@ -170,4 +206,6 @@ def run_prediction(exclude_keywords: list[str], min_train: int) -> dict:
         "backtests": backtests,
         "metrics": metrics,
         "worst_months": worst_months,
+        "z_scores": z_scores,
+        "anomaly_top_months": anomaly_top_months,
     }
