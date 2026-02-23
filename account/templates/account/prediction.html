@@ -38,6 +38,39 @@
 
 </div>
 
+
+{# ===== Phase1：今月の判定（最新月カード） ===== #}
+<div class="card">
+  <h2 class="h2">今月の判定</h2>
+  {% if latest_judgement and latest_judgement.month %}
+    <p class="muted" style="margin-top:6px;">
+      対象月：<b>{{ latest_judgement.month }}</b>
+    </p>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+      <div><span class="muted">タグ：</span><b>{{ latest_judgement.tag }}</b></div>
+      <div>
+        <span class="muted">合計：</span>
+        {% if latest_judgement.total != None %}¥{{ latest_judgement.total|intcomma }}{% else %}—{% endif %}
+      </div>
+      <div>
+        <span class="muted">Z：</span>
+        {% if latest_judgement.z != None %}{{ latest_judgement.z }}{% else %}—{% endif %}
+      </div>
+      <div>
+        <span class="muted">APE：</span>
+        {% if latest_judgement.ape != None %}{{ latest_judgement.ape|floatformat:1 }}%{% else %}—{% endif %}
+      </div>
+    </div>
+
+    {% if latest_judgement.note %}
+      <p class="muted" style="margin-top:10px;">※{{ latest_judgement.note }}</p>
+    {% endif %}
+  {% else %}
+    <p class="muted">データがありません。</p>
+  {% endif %}
+</div>
+
 {# ===== 追加：交際 含む/除外 の精度比較 ===== #}
 <div class="card">
   <h2 class="h2">精度比較：交際を含む / 除外</h2>
@@ -253,7 +286,15 @@
             <td>{{ r.month }}</td>
             <td class="num">¥{{ r.total|intcomma }}</td>
             <td class="num">{% if r.z >= 0 %}+{% endif %}{{ r.z }}</td>
-            <td class="num">{{ r.ape }}%</td>
+            
+            <td class="num">
+              {% if r.ape != None %}
+                {{ r.ape|floatformat:1 }}%
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
             <td>{{ r.label }}</td>
           </tr>
           {% endfor %}

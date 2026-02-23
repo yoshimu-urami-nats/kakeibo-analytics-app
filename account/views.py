@@ -73,8 +73,8 @@ def prediction(request):
         "z_scores": result_include["z_scores"],
         "anomaly_top_months": result_include["anomaly_top_months"],
         "cross_top": result_include["cross_top"],
-
-        # 追加：比較用（2本）
+        "month_tags": result_include.get("month_tags"),
+        "latest_judgement": result_include.get("latest_judgement"),
         "compare_include": result_include,
         "compare_exclude": result_exclude,
     })
