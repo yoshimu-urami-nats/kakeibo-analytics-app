@@ -195,6 +195,49 @@ def run_prediction(exclude_keywords: list[str], min_train: int) -> dict:
         reverse=True
     )[:3]
 
+    def _label_cross(z: float, ape_percent: float, z_th: float = 2.0, ape_th: float = 50.0) -> str:
+        if abs(z) >= z_th and ape_percent >= ape_th:
+            return "強イベント"
+        if abs(z) >= z_th and ape_percent < ape_th:
+            return "イベント（予測成功）"
+        if abs(z) < z_th and ape_percent >= ape_th:
+            return "予測課題"
+        return "通常"
+
+    # -----------------------------
+    # クロス分類（Z × %誤差）
+    # -----------------------------
+    ape_map: dict[str, float] = {}
+    for b in backtests:
+        m = b.get("month")
+        if not m:
+            continue
+        ape_val = b.get("ape")
+        ape_map[m] = float(ape_val) if ape_val is not None else 0.0
+
+    cross_rows = []
+    for r in z_scores:
+        m = r["month"]
+        z = float(r["z"])
+        ape_p = float(ape_map.get(m, 0.0))
+        label = _label_cross(z, ape_p)
+
+        cross_rows.append({
+            "month": m,
+            "total": int(r["total"]),
+            "z": round(z, 2),
+            "ape": round(ape_p, 1),
+            "label": label,
+        })
+
+    priority = {"強イベント": 0, "予測課題": 1, "イベント（予測成功）": 2, "通常": 3}
+    cross_rows_sorted = sorted(
+        cross_rows,
+        key=lambda x: (priority.get(x["label"], 9), -abs(x["z"]), -x["ape"])
+    )
+    cross_top = cross_rows_sorted[:6]
+
+
     return {
         "exclude_keywords": exclude_keywords,
         "series": series,
@@ -208,4 +251,6 @@ def run_prediction(exclude_keywords: list[str], min_train: int) -> dict:
         "worst_months": worst_months,
         "z_scores": z_scores,
         "anomaly_top_months": anomaly_top_months,
+        "cross_rows": cross_rows,
+        "cross_top": cross_top,
     }

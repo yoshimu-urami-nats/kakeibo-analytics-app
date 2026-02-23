@@ -229,6 +229,42 @@
     </div>
     {% endif %}
 
+    {% if cross_top and cross_top|length > 0 %}
+    <div class="card" style="margin-top:12px;">
+      <h2 class="h2">クロス分類（Z × 予測誤差）</h2>
+      <p class="muted">
+        Zは「支出の異常度」、%誤差は「予測の外れ具合」です。<br>
+        両方を見ると「イベント」か「モデル課題」か切り分けやすくなります。
+      </p>
+
+      <table class="summary-table" id="crossTable">
+        <thead>
+          <tr>
+            <th>対象月</th>
+            <th class="num">合計</th>
+            <th class="num">Z</th>
+            <th class="num">%誤差</th>
+            <th>分類</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in cross_top %}
+          <tr data-month="{{ r.month }}" style="cursor:pointer;">
+            <td>{{ r.month }}</td>
+            <td class="num">¥{{ r.total|intcomma }}</td>
+            <td class="num">{% if r.z >= 0 %}+{% endif %}{{ r.z }}</td>
+            <td class="num">{{ r.ape }}%</td>
+            <td>{{ r.label }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="muted" style="margin-top:8px;">
+        ※クリックすると同じ内訳（breakdown）を表示します。
+      </div>
+    </div>
+    {% endif %}
 
     {% if worst_months and worst_months|length > 0 %}
     <div class="card" style="margin-top:12px;">
@@ -256,7 +292,6 @@
         </tbody>
       </table>
 
-      <div id="breakdownMount"></div>
     </div>
     {% endif %}
 
@@ -264,6 +299,8 @@
       ※精度が悪い月がある場合、「一時的イベント支出（交際/家具・家電/医療等）」が原因かを疑い、
       その月の扱い（除外/別カテゴリ化/特徴量追加）を検討。
     </p>
+
+    <div id="breakdownMount"></div>
 
   {% else %}
     <p class="muted">
@@ -298,6 +335,8 @@
   const curUrl = new URL(window.location.href);
   const exclude = curUrl.searchParams.get("exclude") || "";
   const minTrain = curUrl.searchParams.get("min_train") || "";
+
+  const crossTable = document.getElementById("crossTable");
 
   function buildBreakdownUrl(yyyymm){
     const u = new URL(`/prediction/breakdown/${yyyymm}/`, window.location.origin);
@@ -337,6 +376,17 @@
   // zTable があるときだけ登録
   if(zTable){
     zTable.addEventListener("click", (e) => {
+      const tr = e.target.closest("tr[data-month]");
+      if(!tr) return;
+      const yyyymm = tr.getAttribute("data-month");
+      if(!yyyymm) return;
+      loadBreakdown(yyyymm);
+    });
+  }
+
+  // crossTable があるときだけ登録
+  if(crossTable){
+    crossTable.addEventListener("click", (e) => {
       const tr = e.target.closest("tr[data-month]");
       if(!tr) return;
       const yyyymm = tr.getAttribute("data-month");

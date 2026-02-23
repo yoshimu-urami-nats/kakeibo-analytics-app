@@ -72,6 +72,7 @@ def prediction(request):
         "worst_months": result_include["worst_months"],
         "z_scores": result_include["z_scores"],
         "anomaly_top_months": result_include["anomaly_top_months"],
+        "cross_top": result_include["cross_top"],
 
         # 追加：比較用（2本）
         "compare_include": result_include,
