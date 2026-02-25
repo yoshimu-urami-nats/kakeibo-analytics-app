@@ -17,20 +17,22 @@ from typing import Any
 from django.db.models import Sum
 from transactions.models import Transaction
 from django.db.models import Q
+from django.db.models import Sum, Max
 
 def _detect_high_single_spike(
     *,
     yyyymm: str,
     month_total: int,
     exclude_keywords: list[str],
-    ratio_th: float = 0.4,
-    amount_th: int = 50000,
+    # 単一明細（1件）向け
+    single_amount_th: int = 40000,
+    single_ratio_th: float = 0.15,
 ) -> bool:
     """
-    高額単発判定：
-      ・単一カテゴリが
-          月合計の ratio_th 以上
-          かつ amount_th 円以上
+    高額単発判定（Phase1.5）：
+      ・単一明細（1件）が
+          single_amount_th 円以上
+          かつ 月合計の single_ratio_th 以上
     """
     if month_total <= 0:
         return False
@@ -39,20 +41,18 @@ def _detect_high_single_spike(
     for kw in exclude_keywords:
         exclude_q |= Q(category__name__icontains=kw)
 
-    qs = (
+    base_qs = (
         Transaction.objects
         .exclude(source_file="")
         .exclude(category__isnull=True)
         .exclude(exclude_q)
         .filter(source_file__startswith=yyyymm)
-        .values("category__name")
-        .annotate(total=Sum("amount"))
     )
 
-    for r in qs:
-        total = int(r["total"] or 0)
-        if total >= amount_th and total / month_total >= ratio_th:
-            return True
+    # 単一明細（1件）の最大額を見る
+    max_amount = int(base_qs.aggregate(m=Max("amount"))["m"] or 0)
+    if max_amount >= single_amount_th and (max_amount / month_total) >= single_ratio_th:
+        return True
 
     return False
 
@@ -150,10 +150,15 @@ def build_event_detection_data(
         "通常": 4,
         "通常（未検証）": 5,
     }
+
+    def _base_label(label: str) -> str:
+        # "イベント（予測成功） + 高額単発" -> "イベント（予測成功）"
+        return label.split(" + ")[0].strip() if label else ""
+
     cross_rows_sorted = sorted(
         cross_rows,
         key=lambda x: (
-            priority.get(x["label"], 9),
+            priority.get(_base_label(x["label"]), 9),
             -abs(float(x["z"])),
             -(float(x["ape"]) if x["ape"] is not None else -1.0),
         ),
