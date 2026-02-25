@@ -14,10 +14,9 @@ Phase1: イベント判定（ルールベース）→ 月タグ付け → 最新
 from __future__ import annotations
 
 from typing import Any
-from django.db.models import Sum
-from transactions.models import Transaction
 from django.db.models import Q
-from django.db.models import Sum, Max
+from django.db.models import Max
+from transactions.models import Transaction
 
 def _detect_high_single_spike(
     *,
@@ -27,7 +26,7 @@ def _detect_high_single_spike(
     # 単一明細（1件）向け
     single_amount_th: int = 40000,
     single_ratio_th: float = 0.15,
-) -> bool:
+) -> dict[str, Any]:
     """
     高額単発判定（Phase1.5）：
       ・単一明細（1件）が
@@ -35,7 +34,7 @@ def _detect_high_single_spike(
           かつ 月合計の single_ratio_th 以上
     """
     if month_total <= 0:
-        return False
+        return {"is_spike": False, "amount": None, "shop": None}
 
     exclude_q = Q()
     for kw in exclude_keywords:
@@ -49,12 +48,24 @@ def _detect_high_single_spike(
         .filter(source_file__startswith=yyyymm)
     )
 
-    # 単一明細（1件）の最大額を見る
-    max_amount = int(base_qs.aggregate(m=Max("amount"))["m"] or 0)
-    if max_amount >= single_amount_th and (max_amount / month_total) >= single_ratio_th:
-        return True
+    # 単一明細（1件）の最大額（同時にshopも取る）
+    max_row = (
+        base_qs
+        .order_by("-amount")
+        .values("amount", "shop")
+        .first()
+    )
 
-    return False
+    if not max_row:
+        return {"is_spike": False, "amount": None, "shop": None}
+
+    max_amount = int(max_row["amount"] or 0)
+    max_shop = (max_row.get("shop") or "").strip() or "（不明）"
+
+    if max_amount >= single_amount_th and (max_amount / month_total) >= single_ratio_th:
+        return {"is_spike": True, "amount": max_amount, "shop": max_shop}
+    
+    return {"is_spike": False, "amount": max_amount, "shop": max_shop}
 
 def _label_cross(
     *,
@@ -120,14 +131,20 @@ def build_event_detection_data(
         label = _label_cross(z=z, ape_percent=ape_p, z_th=z_th, ape_th=ape_th)
 
         # --- 高額単発チェック ---
-        is_spike = _detect_high_single_spike(
+        spike = _detect_high_single_spike(
             yyyymm=m,
             month_total=month_totals.get(m, 0),
             exclude_keywords=exclude_keywords,
         )
 
+        is_spike = bool(spike.get("is_spike"))
         if is_spike:
-            label = f"{label} + 高額単発"
+            amt = spike.get("amount")
+            shop = spike.get("shop")
+            if amt is not None:
+                label = f"{label} + 高額単発（¥{amt:,} / {shop}）"
+            else:
+                label = f"{label} + 高額単発（{shop}）"
 
         cross_rows.append(
             {
@@ -138,6 +155,8 @@ def build_event_detection_data(
                 "label": label,
                 "has_ape": (ape_p is not None),
                 "is_spike": is_spike,
+                "spike_amount": spike.get("amount"),
+                "spike_shop": spike.get("shop"),
             }
         )
 
