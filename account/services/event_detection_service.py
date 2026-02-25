@@ -14,7 +14,47 @@ Phase1: イベント判定（ルールベース）→ 月タグ付け → 最新
 from __future__ import annotations
 
 from typing import Any
+from django.db.models import Sum
+from transactions.models import Transaction
+from django.db.models import Q
 
+def _detect_high_single_spike(
+    *,
+    yyyymm: str,
+    month_total: int,
+    exclude_keywords: list[str],
+    ratio_th: float = 0.4,
+    amount_th: int = 50000,
+) -> bool:
+    """
+    高額単発判定：
+      ・単一カテゴリが
+          月合計の ratio_th 以上
+          かつ amount_th 円以上
+    """
+    if month_total <= 0:
+        return False
+
+    exclude_q = Q()
+    for kw in exclude_keywords:
+        exclude_q |= Q(category__name__icontains=kw)
+
+    qs = (
+        Transaction.objects
+        .exclude(source_file="")
+        .exclude(category__isnull=True)
+        .exclude(exclude_q)
+        .filter(source_file__startswith=yyyymm)
+        .values("category__name")
+        .annotate(total=Sum("amount"))
+    )
+
+    for r in qs:
+        total = int(r["total"] or 0)
+        if total >= amount_th and total / month_total >= ratio_th:
+            return True
+
+    return False
 
 def _label_cross(
     *,
@@ -48,6 +88,8 @@ def build_event_detection_data(
     series: list[dict[str, Any]],
     backtests: list[dict[str, Any]],
     z_scores: list[dict[str, Any]],
+    exclude_keywords: list[str],
+    month_totals: dict[str, int],
     z_th: float = 2.0,
     ape_th: float = 50.0,
     cross_top_n: int = 6,
@@ -77,6 +119,16 @@ def build_event_detection_data(
         ape_p = ape_map.get(m)  # None なら未検証（月 or 実績0など）
         label = _label_cross(z=z, ape_percent=ape_p, z_th=z_th, ape_th=ape_th)
 
+        # --- 高額単発チェック ---
+        is_spike = _detect_high_single_spike(
+            yyyymm=m,
+            month_total=month_totals.get(m, 0),
+            exclude_keywords=exclude_keywords,
+        )
+
+        if is_spike:
+            label = f"{label} + 高額単発"
+
         cross_rows.append(
             {
                 "month": m,
@@ -85,6 +137,7 @@ def build_event_detection_data(
                 "ape": (round(float(ape_p), 1) if ape_p is not None else None),
                 "label": label,
                 "has_ape": (ape_p is not None),
+                "is_spike": is_spike,
             }
         )
 

@@ -204,6 +204,8 @@ def run_prediction(exclude_keywords: list[str], min_train: int) -> dict:
         series=series,
         backtests=backtests,
         z_scores=z_scores,
+        exclude_keywords=exclude_keywords,
+        month_totals=month_totals,
     )
 
 
