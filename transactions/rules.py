@@ -65,7 +65,6 @@ def guess_category(shop: str) -> Optional[str]:
 # ルール：店名に「これ」が含まれてたらこのメンバー
 MEMBER_RULES = {
     "な": [
-        "ＧＯＯＧＬＥ　ＰＬＡＹ　ＪＡＰＡＮ",
         "ＡＰＰＬＥ　ＣＯＭ　ＢＩＬＬ",
     ],
     "ゆ": [
