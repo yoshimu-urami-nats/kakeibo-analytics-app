@@ -13,7 +13,7 @@
         {{ t.date|date:"Y/n/j" }}({{ t.date|weekday_ja }})
     </td>
 
-    <td>{{ t.shop }}</td>
+    <td>{{ t.display_shop|default:t.shop }}</td>
 
     <td class="col-memo muted">
     {{ t.memo|default:"" }}
