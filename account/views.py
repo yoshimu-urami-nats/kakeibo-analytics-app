@@ -8,7 +8,7 @@ from account.services.prediction_service import build_monthly_series
 from account.services.eda_service import build_eda_context
 from account.services.zones_service import build_zones_context
 from account.services.prediction_breakdown_service import build_prediction_breakdown_data
-
+from account.utils.guest_utils import is_guest
 
 def home(request):
     return render(request, "account/home.html")
@@ -61,6 +61,7 @@ def prediction(request):
     # 3) 画面表示用：メイン表示は「含む」側を従来通り出す
     # -----------------------------
     return render(request, "account/prediction.html", {
+        "is_guest": is_guest(request.user),
         # 入力欄用
         "enable_compare": enable_compare,
         "exclude_keywords": base_exclude_keywords,
@@ -115,14 +116,14 @@ def prediction_breakdown(request, yyyymm: str):
     if data["not_found"]:
         html = render_to_string(
             "account/_prediction_breakdown.html",
-            {**data},
+            {**data, "is_guest": is_guest(request.user)},
             request=request
         )
         return HttpResponse(html)
 
     html = render_to_string(
         "account/_prediction_breakdown.html",
-        data,
+        {**data, "is_guest": is_guest(request.user)},
         request=request
     )
     return HttpResponse(html)
