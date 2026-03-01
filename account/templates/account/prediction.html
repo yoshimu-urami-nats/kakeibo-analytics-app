@@ -74,10 +74,17 @@
 {# ===== 追加：交際 含む/除外 の精度比較 ===== #}
 <div class="card">
   <h2 class="h2">精度比較：交際を含む / 除外</h2>
-  <p class="muted">
-    同じ min_train・同じルールで、「交際」だけを除外した場合の精度を並べて比較します。
-    ※“誤差ドーン月”に交際が直接入っているとは限らないので、ここは「モデル全体の誤差が改善するか」を見る用途。
-  </p>
+
+  {% if enable_compare %}
+    <p class="muted">
+      同じ条件で、「交際」だけを除外した場合の精度を比較しています。
+    </p>
+
+    <p class="muted" style="margin-top:6px;">
+      <a href="?exclude={{ exclude_param|urlencode }}&min_train={{ min_train }}">
+        比較をOFF（高速表示）
+      </a>
+    </p>
 
   <table class="summary-table" style="margin-top:10px;">
     <thead>
@@ -118,6 +125,18 @@
     現在の除外（交際を含む側）：<b>{{ compare_include.exclude_keywords|join:", " }}</b><br>
     交際を除外した側：<b>{{ compare_exclude.exclude_keywords|join:", " }}</b>
   </div>
+
+  {% else %}
+    <p class="muted">
+      ※比較（交際を除外した場合の精度）は追加計算が入るため、必要なときだけ表示できます。
+    </p>
+    <p class="muted" style="margin-top:6px;">
+      <a href="?exclude={{ exclude_param|urlencode }}&min_train={{ min_train }}&compare=1">
+        比較をON（計算して表示）
+      </a>
+    </p>
+  {% endif %}
+
 </div>
 
 <div class="card">

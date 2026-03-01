@@ -39,24 +39,30 @@ def prediction(request):
     else:
         base_exclude_keywords = ["家具・家電"]
 
-    
+    # -----------------------------
+    # 1) 比較ON/OFF（デフォルトOFF）
+    # -----------------------------
+    enable_compare = (request.GET.get("compare") == "1")
 
     # -----------------------------
     # 2) 比較：交際「含む」vs「除外」
     # -----------------------------
     result_include = run_prediction(base_exclude_keywords, min_train)
 
-    # 「交際」を除外に足した版（すでに入ってたら二重にしない）
-    exclude_plus_social = list(base_exclude_keywords)
-    if not any("交際" in x for x in exclude_plus_social):
-        exclude_plus_social.append("交際")
-    result_exclude = run_prediction(exclude_plus_social, min_train)
+    result_exclude = None
+    if enable_compare:
+        # 「交際」を除外に足した版（すでに入ってたら二重にしない）
+        exclude_plus_social = list(base_exclude_keywords)
+        if not any("交際" in x for x in exclude_plus_social):
+            exclude_plus_social.append("交際")
+        result_exclude = run_prediction(exclude_plus_social, min_train)
 
     # -----------------------------
     # 3) 画面表示用：メイン表示は「含む」側を従来通り出す
     # -----------------------------
     return render(request, "account/prediction.html", {
         # 入力欄用
+        "enable_compare": enable_compare,
         "exclude_keywords": base_exclude_keywords,
         "exclude_param": ",".join(base_exclude_keywords),
         "min_train": min_train,
