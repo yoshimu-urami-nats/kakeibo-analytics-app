@@ -983,3 +983,12 @@ h1{ margin: 0 0 0px; font-size: 26px; }
   margin-top: 12px;
   font-weight: bold;
 }
+
+/* Prediction: 比較ON/OFF のリンクだけ見やすく */
+.compare-toggle{
+  color: #7cc4ff;           /* 明るめの青 */
+  text-decoration: underline;
+}
+.compare-toggle:hover{
+  color: #b7e1ff;
+}
