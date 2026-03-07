@@ -1,31 +1,48 @@
 <!-- 検索窓 -->
 {% load date_extras %}
+
 {% for t in transactions %}
-<tr>
-    {% if edit_mode %}
-    <td class="col-check"><input type="checkbox" class="rowCheck" value="{{ t.id }}"></td>
-    {% endif %}
-    <td>{{ t.id }}</td>
+    <tr>
+        {% if edit_mode %}
+        <td class="col-check"><input type="checkbox" class="rowCheck" value="{{ t.id }}"></td>
+        {% endif %}
+        <!-- ID -->
+        <td>{{ t.id }}</td>
 
-    <td class="date {{ t.date|weekday_ja }}">
-        {{ t.date|date:"Y/n/j" }}({{ t.date|weekday_ja }})
-    </td>
+        <!-- 日付 -->
+        <td class="date {{ t.date|weekday_ja }}">
+            {{ t.date|date:"Y/n/j" }}({{ t.date|weekday_ja }})
+        </td>
 
-    <td>{{ t.shop }}</td>
+        <!-- 店名 -->
+        <td>{{ t.shop }}</td>
 
-    <td class="col-memo muted">
-    {{ t.memo|default:"" }}
-    </td>
+        <!-- メモ -->
+        <td>
+            {% if edit_mode %}
+                <!-- 編集モードのときは入力欄を表示（form="bulkForm" で一括送信している）  -->
+                <input type="text"  name="memo_{{ t.id }}" value="{{ t.memo|default_if_none:'' }}" class="input-memo" form="bulkForm" placeholder="メモを入力">
+            {% else %}
+                <!-- 表示モードのときはテキストとして表示  -->
+                <span class="memo-text">{{ t.memo|default_if_none:'' }}</span>
+            {% endif %}
+        </td>
 
-    {% load humanize %}
-    <td class="col-amount">{{ t.amount|intcomma }}</td>
+        {% load humanize %}
 
-    <td>{% if t.category %}{{ t.category.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
-    <td>{% if t.member %}{{ t.member.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
-    <td>{% if t.is_closed %}<span class="pill ok">済</span>{% else %}<span class="pill">未</span>{% endif %}</td>
-</tr>
-{% empty %}
-<tr>
-  <td colspan="{% if edit_mode %}9{% else %}8{% endif %}" class="muted">データがありません</td>
-</tr>
+        <!-- 金額 -->
+        <td class="col-amount">{{ t.amount|intcomma }}</td>
+
+        <!-- カテゴリ -->
+        <td>{% if t.category %}{{ t.category.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
+        <!-- メンバー -->
+        <td>{% if t.member %}{{ t.member.name }}{% else %}<span class="pill warn">未</span>{% endif %}</td>
+        <!-- 確定 -->
+        <td>{% if t.is_closed %}<span class="pill ok">済</span>{% else %}<span class="pill">未</span>{% endif %}</td>
+    </tr>
+
+    {% empty %}
+    <tr>
+    <td colspan="{% if edit_mode %}9{% else %}8{% endif %}" class="muted">データがありません</td>
+    </tr>
 {% endfor %}

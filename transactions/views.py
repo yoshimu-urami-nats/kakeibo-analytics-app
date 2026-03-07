@@ -6,7 +6,8 @@ import shlex
 from datetime import datetime, date
 
 from django.contrib import messages
-from django.shortcuts import redirect, render
+# from django.shortcuts import redirect, render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 
 from .forms import CSVUploadForm
@@ -144,7 +145,7 @@ def _decode_csv_bytes(b: bytes) -> str:
 def transaction_list(request):
 
     edit_mode = request.GET.get("edit") == "1"
-    show_all = request.GET.get("all") == "1"  # ★追加：最新ファイルを全行表示したい時
+    show_all = request.GET.get("all") == "1"  # 最新ファイルを全行表示したい時
 
     latest_source = (
         Transaction.objects
@@ -160,11 +161,18 @@ def transaction_list(request):
         default=None,
     )
 
-
+    ##############################################################################################
     # 一括更新（POST）
+    ##############################################################################################
+
     if request.method == "POST" and request.POST.get("bulk_action"):
-        action = request.POST.get("bulk_action")  # "category" or "member"
+
+        # bulkFormからのアクションを取得 ("category" or "member")
+        action = request.POST.get("bulk_action")  
+
+        # JavaScriptでセットされたチェック済みIDリストを取得（例: "1,2,5"）
         selected_ids = request.POST.get("selected_ids", "")
+
         ids = [int(x) for x in selected_ids.split(",") if x.strip().isdigit()]
 
         if not ids:
@@ -195,6 +203,7 @@ def transaction_list(request):
             else:
                 n = qs.update(category_id=category_id)
                 messages.success(request, f"カテゴリを {n} 件に適用したよ")
+
         elif action == "member":
             member_id = request.POST.get("member_id")
             if not member_id:
@@ -202,6 +211,7 @@ def transaction_list(request):
             else:
                 n = qs.update(member_id=member_id)
                 messages.success(request, f"メンバーを {n} 件に適用したよ")
+
         elif action == "confirm":
             qs2 = qs.filter(
                 category__isnull=False,
@@ -210,6 +220,30 @@ def transaction_list(request):
             )
             updated = qs2.update(is_closed=True)
             messages.success(request, f"確定にしました：{updated}件")
+
+        # メモの登録処理
+        elif action == 'memoRegist' and ids:  # selected_ids ではなく、数値リスト化した ids を使う
+            for tx_id in ids:
+                # フォームから 'memo_123' のような名前で送られてくる値を取得
+                new_memo = request.POST.get(f'memo_{tx_id}')
+
+                # 動作確認用ログ
+                print(f"DEBUG: Processing ID={tx_id}, Memo={new_memo}")
+                
+                # DB更新
+                Transaction.objects.filter(id=tx_id).update(memo=new_memo)
+            
+            # 成功メッセージ
+            messages.success(request, f"{len(ids)} 件のメモを更新したよ")
+            
+            # 検索状態などを維持してリダイレクト
+            q_keep = (request.POST.get("q") or "").strip()
+            params = ["edit=1"]
+            if show_all: params.append("all=1")
+            if q_keep:
+                from urllib.parse import quote
+                params.append("q=" + quote(q_keep))
+            return redirect(request.path + "?" + "&".join(params))
 
         q_keep = (request.POST.get("q") or "").strip()
 
@@ -224,6 +258,10 @@ def transaction_list(request):
 
         qs_suffix = ("?" + "&".join(params)) if params else ""
         return redirect(request.path + qs_suffix)
+        
+    ##############################################################################################
+    # CSVインポート処理
+    ##############################################################################################
 
     if request.method == "POST":
         form = CSVUploadForm(request.POST, request.FILES)
@@ -435,6 +473,20 @@ def transaction_list(request):
             "summary": summary,
         },
     )
+
+##############################################################################################    
+# メモの登録処理
+##############################################################################################
+
+def transaction_update(request, pk):
+
+    if request.method == 'POST':
+        transaction = get_object_or_404(Transaction, pk=pk)
+        memo_value = request.POST.get('memo')
+        transaction.memo = memo_value
+        transaction.save()
+        # 更新後の行のみを返すとスムーズ（部分更新）
+        return render(request, 'transactions/_transaction_rows.html', {'transactions': [transaction]})
 
 @login_required
 def transaction_rows(request):
