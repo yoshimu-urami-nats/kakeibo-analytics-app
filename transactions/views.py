@@ -193,6 +193,11 @@ def transaction_list(request):
 
           qs_suffix = ("?" + "&".join(params)) if params else ""
           return redirect(request.path + qs_suffix)
+        
+        # GuestはCSV取込POSTを禁止
+        if request.method == "POST" and is_guest(request.user):
+            messages.error(request, "GuestアカウントではCSVインポートできません。")
+            return redirect("account:csv_import")
 
         qs = Transaction.objects.filter(id__in=ids)
         if latest_source:

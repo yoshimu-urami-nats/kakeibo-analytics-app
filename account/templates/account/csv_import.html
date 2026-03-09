@@ -1,3 +1,5 @@
+<!-- account\templates\account\csv_import.html -->
+
 {% extends "account/base.html" %}
 {% load static %}
 {% block title %}CSV Import{% endblock %}
@@ -10,14 +12,42 @@
     {% csrf_token %}
 
     <div class="upload-row">
-      <input id="csvInput" class="upload-input" type="file" name="csv_file" accept=".csv">
-      <button type="button" class="btn btn-file" id="pickBtn">CSVを選択</button>
+      
+      <input
+        id="csvInput"
+        class="upload-input"
+        type="file"
+        name="csv_file"
+        accept=".csv"
+        {% if request.user.username == "guest" %}disabled{% endif %}
+      >
+      <button
+        type="button"
+        class="btn btn-file"
+        id="pickBtn"
+        {% if request.user.username == "guest" %}disabled aria-disabled="true"{% endif %}
+      >
+        CSVを選択
+      </button>
+
       <div class="upload-filename" id="fileName">未選択</div>
     </div>
 
-    <div class="upload-actions">
-      <button type="submit" class="btn btn-primary">インポート</button>
+    <div class="upload-actions">      
+      <button
+        type="submit"
+        class="btn btn-primary"
+        {% if request.user.username == "guest" %}disabled aria-disabled="true"{% endif %}
+      >
+        インポート
+      </button>
     </div>
+
+    {% if request.user.username == "guest" %}
+      <div class="upload-messages">
+        <div class="notice info">GuestアカウントではCSVインポートはできません。</div>
+      </div>
+    {% endif %}
 
     {% if messages %}
       <div class="upload-messages">
@@ -35,7 +65,10 @@
     const pickBtn = document.getElementById("pickBtn");
     const fileName = document.getElementById("fileName");
 
-    pickBtn.addEventListener("click", () => input.click());
+    if (!pickBtn.disabled) {
+      pickBtn.addEventListener("click", () => input.click());
+    }
+
     input.addEventListener("change", () => {
       fileName.textContent = input.files && input.files[0] ? input.files[0].name : "未選択";
     });
