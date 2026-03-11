@@ -34,7 +34,7 @@
                 <th></th>
                 <th>合計</th>
                 <th>一人当たり</th>
-                <th>住信SBI振込</th>
+                <th>{% if request.user.username == "guest" %}振込{% else %}住信SBI振込{% endif %}</th>
               </tr>
             </thead>
 
@@ -75,7 +75,7 @@
               </tr>
 
               <tr>
-                <th class="rowhead">WRX</th>
+                <th class="rowhead">{% if request.user.username == "guest" %}W**{% else %}WRX{% endif %}</th>
                 <td class="num">¥{{ summary.wrx|intcomma }}</td>
                 <td class="num">¥{{ summary.wrx_per_person|intcomma }}</td>
                 <td class="num muted">—</td>
@@ -109,18 +109,24 @@
         <div class="edit-toggle">
           <div class="edit-toggle-label">編集モード</div>
 
-          {% if edit_mode %}
-            <a class="toggle on"
-              href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}{% endif %}"
-              aria-label="編集モードをOFFにする">
+          {% if request.user.username == "guest" %}
+            <span class="toggle off is-disabled" aria-disabled="true" aria-label="Guestアカウントでは編集モードをONにできません">
               <span class="toggle-knob" aria-hidden="true"></span>
-            </a>
+            </span>
           {% else %}
-            <a class="toggle off"
-              href="?edit=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
-              aria-label="編集モードをONにする">
-              <span class="toggle-knob" aria-hidden="true"></span>
-            </a>
+            {% if edit_mode %}
+              <a class="toggle on"
+                href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}{% endif %}"
+                aria-label="編集モードをOFFにする">
+                <span class="toggle-knob" aria-hidden="true"></span>
+              </a>
+            {% else %}
+              <a class="toggle off"
+                href="?edit=1{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}"
+                aria-label="編集モードをONにする">
+                <span class="toggle-knob" aria-hidden="true"></span>
+              </a>
+            {% endif %}
           {% endif %}
         </div>
 
