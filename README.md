@@ -63,10 +63,12 @@ Password: test012345
 
 ### 支出ゾーン分析
 
-中央値 / 上位75% を基準に支出レベルを分類  
-Low  
-Normal  
-High  
+直近ベース期間の中央値 (median) と 75 パーセンタイル (p75) を基準に、
+今月の支出をカテゴリ別に判定します。
+
+- 安定ゾーン：今月支出が中央値以下
+- 高めゾーン：中央値超〜75パーセンタイル以下
+- 負担感あり：75パーセンタイル超
 
 ---
 
@@ -101,12 +103,12 @@ High
 **Service Layer** として実装しています。
 
 views.py  
-↓  
+   ↓  
 services/  
-eda_service.py  
-prediction_service.py  
-zones_service.py  
-event_detection_service.py  
+   ├─ eda_service.py  
+   ├─ prediction_service.py  
+   ├─ zones_service.py  
+   └─ event_detection_service.py
 
 - View → UI制御
 - Service → 分析ロジック
@@ -119,6 +121,7 @@ event_detection_service.py
 |---|---|
 Backend | Python / Django |
 Database | PostgreSQL (Supabase) |
+Data Processing | Django ORM / Python statistics
 Hosting | Render |
 
 
@@ -132,7 +135,6 @@ Hosting | Render |
 - Architecture
 - Project Map
 - Project Structure
-- Classification Rules
 - Prediction Design
 
 ---
@@ -154,3 +156,11 @@ Hosting | Render |
 # Author
 
 Yoshimu U. Nats
+
+## Special Thanks
+
+- y-iwashi
+  - 開発相談 / レビュー協力
+
+- snrnapa
+  - 開発相談
