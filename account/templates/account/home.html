@@ -28,12 +28,18 @@
           -
         {% endif %}
       </p>
-      <p class="muted">技術スタック：Django / Python / PostgreSQL (Supabase) / pandas / Render</p>
+      <p class="muted">技術スタック：Django / Python / PostgreSQL (Supabase) / Render</p>
       <p class="muted">
         GitHub Repository:
         <a href="https://github.com/yoshimu-urami-nats/kakeibo-analytics-app" target="_blank" rel="noopener noreferrer">
           kakeibo-analytics-app
         </a>
+      </p>
+      <p style="margin-top:6px">
+        <b>Demo Account</b><br>
+        閲覧用ゲストアカウント<br>
+        ID: guest<br>
+        Password: test012345
       </p>
     </div>
   </div>
@@ -69,6 +75,33 @@
 
         </ul>
 
+      </div>
+    </div>
+  </details>
+</div>
+
+<div class="card">
+  <details class="acc home-acc">
+    <summary class="acc-title">
+      <span class="acc-label">システム構成</span>
+    </summary>
+
+    <div class="summary-content">
+      <div class="summary-inner">
+        <p>本アプリは、クレジットカード明細CSVを取り込み、Django上で集計・分析処理を行い、Web画面で可視化・予測結果を確認できる構成としている。</p>
+
+        <ul>
+          <li><b>入力</b>：クレジットカード明細CSV</li>
+          <li><b>Webアプリ</b>：Django</li>
+          <li><b>データ保存</b>：PostgreSQL（Supabase）</li>
+          <li><b>分析処理</b>：Python による集計・統計処理</li>
+          <li><b>画面</b>：Home / Table / EDA / Zones / Prediction</li>
+          <li><b>公開環境</b>：Render</li>
+        </ul>
+
+        <div class="callout">
+          CSV取込 → DB保存 → 集計・分析 → Web画面表示、という流れで構成している。
+        </div>
       </div>
     </div>
   </details>
