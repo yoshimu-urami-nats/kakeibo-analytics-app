@@ -6,7 +6,6 @@ import shlex
 from datetime import datetime, date
 
 from django.contrib import messages
-# from django.shortcuts import redirect, render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 
@@ -235,9 +234,6 @@ def transaction_list(request):
             for tx_id in ids:
                 # フォームから 'memo_123' のような名前で送られてくる値を取得
                 new_memo = request.POST.get(f'memo_{tx_id}')
-
-                # 動作確認用ログ
-                print(f"DEBUG: Processing ID={tx_id}, Memo={new_memo}")
                 
                 # DB更新
                 Transaction.objects.filter(id=tx_id).update(memo=new_memo)
@@ -495,7 +491,7 @@ def transaction_list(request):
 ##############################################################################################    
 # メモの登録処理
 ##############################################################################################
-
+@login_required
 def transaction_update(request, pk):
 
     if request.method == 'POST':
