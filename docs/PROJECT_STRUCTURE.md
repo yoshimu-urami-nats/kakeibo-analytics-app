@@ -1,3 +1,5 @@
+<!-- docs\PROJECT_STRUCTURE.md -->
+
 # Project Structure（最終更新：2026-02-14）
 
 このドキュメントは、リポジトリの全体構造と「どこに何があるか」を素早く思い出すためのメモ。
@@ -48,6 +50,10 @@ kakeibo-analytics-app/
 
 #### services/
 
+- `account/services/home_service.py`
+  - Home画面用データ集計
+  - 最新月・予測月などの表示用情報生成
+
 - `account/services/prediction_service.py`
   - 月次系列生成
   - 予測ロジック（回帰・バックテストなど）
@@ -63,6 +69,10 @@ kakeibo-analytics-app/
   - 指定月のカテゴリ・店舗内訳集計
   - 学習期間内訳集計
 
+- `event_detection_service.py`
+  - 支出イベント検出
+  - 高額・異常支出などの抽出
+
 #### utils/
 
 - `account/utils/date_utils.py`
@@ -71,6 +81,10 @@ kakeibo-analytics-app/
 - `account/utils/stats_utils.py`
   - percentile計算
   - zone判定補助
+
+- `account/utils/guest_utils.py`
+  - Guestユーザー用データマスキング
+  - 表示用ダミーデータ生成
 
 #### templates
 
