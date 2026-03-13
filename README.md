@@ -122,9 +122,6 @@ Password: test012345
 
 # Architecture
 
-分析ロジックは Django View から分離し  
-**Service Layer** として実装しています。
-
 views.py  
    ↓  
 services/  
@@ -133,8 +130,13 @@ services/
    ├─ zones_service.py  
    └─ event_detection_service.py
 
-- View → UI制御
-- Service → 分析ロジック
+Service Layer パターンを採用し、
+
+- View : リクエスト処理 / レンダリング
+- Service : ビジネスロジック（分析・予測処理）
+- Model : データアクセス
+
+という責務分離を行っています。
 
 ---
 
@@ -173,6 +175,23 @@ Hosting | Render |
 - 個人情報
 
 は **ダミーデータ (HOGE)** に置き換えられています。
+
+---
+# Why I Built This
+
+日常の支出データを分析し、支出傾向を把握したいと思ったことがきっかけで作成しました。
+
+クレジットカードの明細CSVをもとに、
+
+- 支出の可視化（EDA）
+- 支出カテゴリの分析
+- 翌月支出の予測
+- 異常支出の検知
+
+を行えるアプリを開発しました。
+
+また、単なる家計簿ではなく  
+**データ分析と統計的手法を組み合わせたアプリケーション**として設計しています。
 
 ---
 # Project Scale
