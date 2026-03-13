@@ -52,7 +52,7 @@
 
 ### Prediction
 <p align="center">
-  <img src="docs/assets/Prediction.png" width="1200" />
+  <img src="docs/assets/Prediction2.png" width="1200" />
 </p>
 
 ---
