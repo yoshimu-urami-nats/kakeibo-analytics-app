@@ -162,7 +162,7 @@
     </form>
   </div>
 
-
+  <!-- 編集モード時に表示される -->
   {% if edit_mode %}
   <div class="card bulk-card">
     <h2 class="h2">一括操作</h2>
@@ -202,6 +202,11 @@
           <div class="bulk-item">
             <div class="muted">確定（カテゴリ&メンバー埋まってる行だけ）</div>
             <button class="btn btn-primary" type="submit" name="bulk_action" value="confirm">確定する</button>
+          </div>
+
+          <div class="bulk-item">
+            <div class="muted">メモを登録（チェックボックスが入っているものだけ）</div>
+            <button class="btn btn-primary" type="submit" name="bulk_action" value="memoRegist">メモを登録</button>
           </div>
         </div>
     </form>

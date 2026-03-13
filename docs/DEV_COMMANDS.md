@@ -58,6 +58,14 @@ streamlit run streamlit_app.py
 
 <br>
 
+## 初回起動前に依存関係をインストール
+
+```bash
+pip install -r requirements.txt
+```
+
+<br>
+
 # Django
 ## サーバー起動
 ```bash
