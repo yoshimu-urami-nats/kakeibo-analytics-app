@@ -222,3 +222,5 @@ _local/
 
 # issues
 docs/issues
+
+.VSCodeCounter/

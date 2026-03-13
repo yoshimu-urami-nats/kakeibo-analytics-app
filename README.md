@@ -33,6 +33,19 @@
 
 分析ロジックは Django View から分離し、`services` 層として実装しています。
 
+---
+## App Preview
+### Home
+![home](static\images\Home.png)
+
+### Data Table
+![table](static\images\Table.png)
+
+### EDA
+![eda](static\images\EDA.png)
+
+### Prediction
+![prediction](static\images\Prediction.png)
 
 ---
 
@@ -150,6 +163,20 @@ Hosting | Render |
 - 個人情報
 
 は **ダミーデータ (HOGE)** に置き換えられています。
+
+---
+# Project Scale
+Date : 2026-03-13  
+Total : 75 files,  5225 codes,  
+ 472 comments, 1345 blanks,  
+ all 7042 lines
+
+| language | files | code | comment | blank | total |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| Python | 54 | 2,206 | 356 | 617 | 3,179 |
+| HTML | 14 | 1,627 | 27 | 288 | 1,942 |
+| PostCSS | 1 | 736 | 86 | 172 | 994 |
+| Markdown | 6 | 656 | 3 | 268 | 927 |
 
 ---
 
