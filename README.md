@@ -36,16 +36,24 @@
 ---
 ## App Preview
 ### Home
-![home](static\images\Home.png)
+<p align="center">
+  <img src="docs/assets/Home.png" width="1200" />
+</p>
 
 ### Data Table
-![table](static\images\Table.png)
+<p align="center">
+  <img src="docs/assets/Table.png" width="1200" />
+</p>
 
 ### EDA
-![eda](static\images\EDA.png)
+<p align="center">
+  <img src="docs/assets/EDA.png" width="1200" />
+</p>
 
 ### Prediction
-![prediction](static\images\Prediction.png)
+<p align="center">
+  <img src="docs/assets/Prediction.png" width="1200" />
+</p>
 
 ---
 
